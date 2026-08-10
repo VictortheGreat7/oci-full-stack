@@ -1,5 +1,4 @@
 *.terraform
-*.txt
 *alerts.tf*
 *dashboard.tf*
 prev_attempts/
