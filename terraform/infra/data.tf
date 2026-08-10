@@ -18,6 +18,6 @@ data "oci_identity_user_group_memberships" "caller" {
 }
 
 data "oci_identity_group" "caller" {
-  for_each = toset(data.oci_identity_user_group_memberships.caller[*].memberships[*].group_id)
+  for_each = toset(flatten(data.oci_identity_user_group_memberships.caller[*].memberships[*].group_id))
   group_id = each.value
 }
