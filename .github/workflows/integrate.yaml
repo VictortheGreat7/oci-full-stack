@@ -205,9 +205,6 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.30.0'
-      - name: Decode OCI Private Key
-        run: |
-          echo "OCI_CLI_KEY_CONTENT=$(printf '%s' "${{ secrets.OCI_PRIVATE_KEY }}" | base64 -d)" >> $GITHUB_ENV
       - name: Setup OCI CLI
         uses: oracle-actions/run-oci-cli-command@v1.3.2
         with:
@@ -231,7 +228,7 @@ jobs:
           region=${OCI_REGION}
           key_file=$HOME/.oci/key.pem
           EOF
-          printf '%s' "${OCI_PRIVATE_KEY}" | base64 -d > "$HOME/.oci/key.pem"
+          printf '%s\n' "${OCI_PRIVATE_KEY}" > "$HOME/.oci/key.pem"
           chmod 600 "$HOME/.oci/config" "$HOME/.oci/key.pem"
       - name: Cache Terraform Plugin Dir
         uses: actions/cache@v5
@@ -334,9 +331,6 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.30.0'
-      - name: Decode OCI Private Key
-        run: |
-          echo "OCI_CLI_KEY_CONTENT=$(printf '%s' "${{ secrets.OCI_PRIVATE_KEY }}" | base64 -d)" >> $GITHUB_ENV
       - name: Setup OCI CLI
         uses: oracle-actions/run-oci-cli-command@v1.3.2
         with:
@@ -400,9 +394,6 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.30.0'
-      - name: Decode OCI Private Key
-        run: |
-          echo "OCI_CLI_KEY_CONTENT=$(printf '%s' "${{ secrets.OCI_PRIVATE_KEY }}" | base64 -d)" >> $GITHUB_ENV
       - name: Setup OCI CLI
         uses: oracle-actions/run-oci-cli-command@v1.3.2
         with:
