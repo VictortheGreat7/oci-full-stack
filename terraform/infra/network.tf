@@ -54,11 +54,6 @@ resource "oci_core_route_table" "public" {
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.kronos.id
   }
-  route_rules {
-    destination       = "all-iad-services-in-oracle-services-network"
-    destination_type  = "SERVICE_CIDR_BLOCK"
-    network_entity_id = oci_core_service_gateway.kronos.id
-  }
 }
 
 resource "oci_core_route_table" "private" {
