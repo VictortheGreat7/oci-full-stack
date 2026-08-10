@@ -19,6 +19,9 @@ resource "oci_containerengine_cluster" "kronos" {
   name               = local.cluster_name
   type               = "ENHANCED_CLUSTER" # required for autoscaler workload identity
 
+  # Wait for the OKE service policy to propagate before CreateCluster.
+  depends_on = [time_sleep.wait_for_oke_service_policy]
+
   endpoint_config {
     is_public_ip_enabled = true
     subnet_id            = oci_core_subnet.api.id

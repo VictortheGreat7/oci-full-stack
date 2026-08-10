@@ -9,15 +9,6 @@ data "oci_containerengine_cluster_option" "kronos" {
   compartment_id    = local.compartment_ocid
 }
 
-# Groups the calling user (var.oci_user_ocid) belongs to. Used to grant the
-# caller manage cluster-family so it can create/manage the OKE cluster.
-data "oci_identity_user_group_memberships" "caller" {
-  count          = var.oci_user_ocid != "" ? 1 : 0
-  compartment_id = var.oci_tenancy_ocid
-  user_id        = var.oci_user_ocid
-}
-
-data "oci_identity_group" "caller" {
-  for_each = toset(flatten(data.oci_identity_user_group_memberships.caller[*].memberships[*].group_id))
-  group_id = each.value
-}
+# The calling user authenticates as the tenancy root (or an administrator), so
+# no extra caller policy is required - Tenant Admin Policy already grants full
+# access to manage cluster-family resources.

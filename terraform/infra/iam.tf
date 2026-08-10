@@ -11,16 +11,14 @@ resource "oci_identity_policy" "oke_service" {
   ]
 }
 
-resource "oci_identity_policy" "oke_caller" {
-  for_each = { for g in data.oci_identity_group.caller : g.name => g.name }
+# IAM policy changes are eventually consistent: wait before creating the cluster
+# so the OKE service policy has propagated.
+resource "time_sleep" "wait_for_oke_service_policy" {
+  count = var.enable_oke_service_policy ? 1 : 0
 
-  compartment_id = var.oci_tenancy_ocid
-  name           = "oke-caller-${random_pet.suffix.id}-${replace(each.key, "-", "_")}"
-  description    = "Allow the calling user's groups to manage OKE cluster resources."
+  depends_on = [oci_identity_policy.oke_service]
 
-  statements = [
-    "Allow group ${each.key} to manage cluster-family in compartment id ${local.compartment_ocid}"
-  ]
+  create_duration = "30s"
 }
 
 # Workload-identity policies so the KubernetesClusterAutoscaler add-on can
