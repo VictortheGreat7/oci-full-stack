@@ -204,8 +204,6 @@ jobs:
         uses: oracle-actions/run-oci-cli-command@v1.3.2
         with:
           command: 'iam region list'
-        env:
-          OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING: true
       - name: Write OCI CLI config file
         env:
           OCI_TENANCY: ${{ secrets.OCI_TENANCY }}
