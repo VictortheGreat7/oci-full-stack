@@ -68,7 +68,13 @@ variable "cni_type" {
 variable "node_shape" {
   description = "Instance shape for the node pool."
   type        = string
-  default     = "VM.Standard.E4.Flex"
+  default     = "VM.Standard.E5.Flex"
+}
+
+variable "node_image_id" {
+  description = "OKE node image OCID (Oracle-Linux x86) for the region. Get current with: oci ce node-pool-options get --node-pool-option-id all --region REGION"
+  type        = string
+  default     = "ocid1.image.oc1.iad.aaaaaaaa5oryepv23xuh2327753aeiom2bmkmflk6k62gbcri6f7fig3oezq"
 }
 
 variable "node_shape_ocpus" {
@@ -142,6 +148,12 @@ variable "api_endpoint_ingress_cidrs" {
   description = "CIDRs allowed to reach the Kubernetes API endpoint (6443)."
   type        = list(string)
   default     = ["0.0.0.0/0"]
+}
+
+variable "network_service_id" {
+  description = "OCID of the OCI network service (Service Gateway) for the region. Get with: oci network service list --region REGION"
+  type        = string
+  default     = "ocid1.service.oc1.iad.aaaaaaaam4zfmy2rjue6fmglumm3czgisxzrnvrwqeodtztg7hwa272mlfna"
 }
 
 variable "enable_oke_service_policy" {

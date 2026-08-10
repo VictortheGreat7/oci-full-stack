@@ -4,12 +4,6 @@ locals {
   # Latest K8s version supported by OKE in the region unless pinned.
   kubernetes_version = var.kubernetes_version != "" ? var.kubernetes_version : data.oci_containerengine_cluster_option.kronos.kubernetes_versions[0]
 
-  # OKE-ready node image for the chosen shape.
-  node_image = one([
-    for s in data.oci_containerengine_node_pool_option.kronos.sources : s.image_id
-    if s.source_type == "IMAGE"
-  ])
-
   availability_domain = data.oci_identity_availability_domains.kronos.availability_domains[0].name
 }
 
@@ -69,7 +63,7 @@ resource "oci_containerengine_node_pool" "kronos" {
 
   node_source_details {
     source_type             = "IMAGE"
-    image_id                = local.node_image
+    image_id                = var.node_image_id # OKE Oracle-Linux-9.8 x86 image (us-ashburn-1)
     boot_volume_size_in_gbs = var.node_disk_size_gbs
   }
 

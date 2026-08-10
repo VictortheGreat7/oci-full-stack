@@ -8,12 +8,3 @@ data "oci_containerengine_cluster_option" "kronos" {
   cluster_option_id = "all"
   compartment_id    = local.compartment_ocid
 }
-
-# Node pool option exposes the OKE-ready images for a shape.
-data "oci_containerengine_node_pool_option" "kronos" {
-  node_pool_option_id = "all"
-  compartment_id      = local.compartment_ocid
-}
-
-# Service Gateway service CIDR (e.g. all-ix-services-in-oci).
-data "oci_core_services" "kronos" {}

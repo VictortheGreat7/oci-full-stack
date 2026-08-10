@@ -6,14 +6,6 @@ locals {
   api_subnet_cidr   = cidrsubnet(var.vcn_cidr, 8, 1) # 10.240.1.0/24 (public, API endpoint)
   nodes_subnet_cidr = cidrsubnet(var.vcn_cidr, 8, 2) # 10.240.2.0/24 (private, nodes)
   pods_subnet_cidr  = cidrsubnet(var.vcn_cidr, 8, 3) # 10.240.3.0/24 (private, pod IPs, CI_BASED)
-
-  # Service Gateway CIDR for the current region.
-  services_cidr = coalesce(
-    one([for s in data.oci_core_services.kronos.services :
-      s.cidr_block if s.name == "All ${var.oci_region} Services In Oracle Services Network"
-    ]),
-    "all-ix-services-in-oci"
-  )
 }
 
 # --- VCN ---
@@ -39,14 +31,15 @@ resource "oci_core_nat_gateway" "kronos" {
   block_traffic  = false
 }
 
+# Private path to OCI regional services (registry, object storage, OKE API).
+# service_id is the regional "All ... Services In Oracle Services Network"
+# entry; fetch with: oci network service list --region REGION
 resource "oci_core_service_gateway" "kronos" {
   compartment_id = local.compartment_ocid
   vcn_id         = oci_core_vcn.kronos.id
   display_name   = "${local.cluster_name}-svcgw"
   services {
-    service_id = one([for s in data.oci_core_services.kronos.services :
-      s.id if s.name == "All ${var.oci_region} Services In Oracle Services Network"
-    ])
+    service_id = var.network_service_id
   }
 }
 
@@ -62,7 +55,7 @@ resource "oci_core_route_table" "public" {
     network_entity_id = oci_core_internet_gateway.kronos.id
   }
   route_rules {
-    destination       = local.services_cidr
+    destination       = "all-iad-services-in-oracle-services-network"
     destination_type  = "SERVICE_CIDR_BLOCK"
     network_entity_id = oci_core_service_gateway.kronos.id
   }
@@ -79,7 +72,7 @@ resource "oci_core_route_table" "private" {
     network_entity_id = oci_core_nat_gateway.kronos.id
   }
   route_rules {
-    destination       = local.services_cidr
+    destination       = "all-iad-services-in-oracle-services-network"
     destination_type  = "SERVICE_CIDR_BLOCK"
     network_entity_id = oci_core_service_gateway.kronos.id
   }
