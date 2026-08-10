@@ -11,6 +11,18 @@ resource "oci_identity_policy" "oke_service" {
   ]
 }
 
+resource "oci_identity_policy" "oke_caller" {
+  for_each = { for g in data.oci_identity_group.caller : g.name => g.name }
+
+  compartment_id = var.oci_tenancy_ocid
+  name           = "oke-caller-${random_pet.suffix.id}-${replace(each.key, "-", "_")}"
+  description    = "Allow the calling user's groups to manage OKE cluster resources."
+
+  statements = [
+    "Allow group ${each.key} to manage cluster-family in compartment id ${local.compartment_ocid}"
+  ]
+}
+
 # Workload-identity policies so the KubernetesClusterAutoscaler add-on can
 # resize the node pool it is bound to. Only needed with authType=workload.
 resource "oci_identity_policy" "cluster_autoscaler" {
