@@ -76,7 +76,8 @@ resource "helm_release" "gateway" {
 
   depends_on = [
     helm_release.cert_manager_prod_issuer,
-    helm_release.cert_manager_stag_issuer
+    helm_release.cert_manager_stag_issuer,
+    helm_release.cilium
   ]
 }
 

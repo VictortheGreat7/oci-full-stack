@@ -1,0 +1,23 @@
+# Cilium installed on OKE in CNI chaining mode.
+# OKE's VCN-native CNI (oci-ipvlan / oci-ptp) owns pod IPAM from the VCN pod
+# subnet; Cilium layers eBPF policy, load-balancing and the Gateway API on top.
+# Ref: https://docs.cilium.io/en/latest/installation/cni-chaining-oracle-oke/
+
+cni:
+  chainingTarget: oci
+  exclusive: false
+
+routingMode: native
+enableIPv4Masquerade: false
+
+# Keep OKE's kube-proxy in place; Cilium only augments service handling.
+# Re-evaluate if the Gateway fails to reach Programmed.
+kubeProxyReplacement: false
+
+ipam:
+  mode: cluster-pool
+  operator:
+    clusterPoolIPv4PodCIDRList: 100.64.0.0/16
+
+gatewayAPI:
+  enabled: true

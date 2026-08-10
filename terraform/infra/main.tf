@@ -39,8 +39,9 @@ resource "oci_containerengine_cluster" "kronos" {
 
     kubernetes_network_config {
       services_cidr = var.services_cidr
-      # With CI_BASED (VCN-native) pods are addressed from the VCN, so no pod CIDR.
-      pods_cidr = var.cni_type == "CI_BASED" ? null : var.pods_cidr
+      # With VCN-native pod networking pods are addressed from the VCN pod
+      # subnet, so no separate pod CIDR is set on the cluster.
+      pods_cidr = null
     }
 
     admission_controller_options {

@@ -60,9 +60,9 @@ variable "kubernetes_version" {
 }
 
 variable "cni_type" {
-  description = "CNI to use. CI_BASED = OKE-managed Cilium (required by the traffic stack)."
+  description = "CNI to use. OCI_VCN_IP_NATIVE = VCN-native pod networking (Cilium is layered on top via CNI chaining)."
   type        = string
-  default     = "CI_BASED"
+  default     = "OCI_VCN_IP_NATIVE"
 }
 
 variable "node_shape" {
@@ -130,12 +130,6 @@ variable "services_cidr" {
   description = "CIDR for ClusterIP services."
   type        = string
   default     = "10.96.0.0/16"
-}
-
-variable "pods_cidr" {
-  description = "CIDR for Pod IPs (used by the autoscaler / CNI)."
-  type        = string
-  default     = "10.244.0.0/16"
 }
 
 variable "lb_ingress_cidrs" {

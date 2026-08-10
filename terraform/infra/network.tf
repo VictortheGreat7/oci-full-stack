@@ -5,7 +5,7 @@ locals {
   lb_subnet_cidr    = cidrsubnet(var.vcn_cidr, 8, 0) # 10.240.0.0/24 (public, LoadBalancers)
   api_subnet_cidr   = cidrsubnet(var.vcn_cidr, 8, 1) # 10.240.1.0/24 (public, API endpoint)
   nodes_subnet_cidr = cidrsubnet(var.vcn_cidr, 8, 2) # 10.240.2.0/24 (private, nodes)
-  pods_subnet_cidr  = cidrsubnet(var.vcn_cidr, 8, 3) # 10.240.3.0/24 (private, pod IPs, CI_BASED)
+  pods_subnet_cidr  = cidrsubnet(var.vcn_cidr, 8, 3) # 10.240.3.0/24 (private, VCN-native pod IPs)
 }
 
 # --- VCN ---
