@@ -56,7 +56,7 @@ variable "cluster_name" {
 variable "kubernetes_version" {
   description = "Kubernetes version to install (empty = latest from the region). Must match the OKE worker node image in node_image_id."
   type        = string
-  default     = "v1.36.1"
+  default     = "v1.33.10"
 }
 
 variable "cni_type" {
@@ -74,7 +74,7 @@ variable "node_shape" {
 variable "node_image_id" {
   description = "OKE node image OCID (Oracle-Linux x86) for the region. Get current with: oci ce node-pool-options get --node-pool-option-id all --region REGION"
   type        = string
-  default     = "ocid1.image.oc1.iad.aaaaaaaa5oryepv23xuh2327753aeiom2bmkmflk6k62gbcri6f7fig3oezq"
+  default     = "ocid1.image.oc1.iad.aaaaaaaaupscrm3gb3xsko46fc3tjcgbuufzxyd5tvvbhm5xm3wxsj7ey3da"
 }
 
 variable "node_shape_ocpus" {
