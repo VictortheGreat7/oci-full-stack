@@ -1,0 +1,10 @@
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: main-gateway
+      namespace: kube-system
+  hostnames:
+    - ${headlamp_hostname}
+
+clusterRoleBinding:
+  create: false

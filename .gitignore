@@ -1,0 +1,62 @@
+*.terraform
+*.txt
+*alerts.tf*
+*dashboard.tf*
+prev_attempts/
+**microservices/
+/*.sh
+/*.py
+id_rsa
+
+# Terraform / OCI
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+terraform/kubeconfig
+terraform/infra/kubeconfig
+**/terraform.tfvars.json
+
+/docs/agents
+AGENTS.md
+CONTEXT.md
+skills-lock.json
+.agents
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+xREADME.md

@@ -1,0 +1,160 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy-cluster:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_USER }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
+      OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
+    steps:
+    - name: Checkout this Github repository
+      uses: actions/checkout@v6
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+      with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'v1.30.0'
+    - name: Setup OCI CLI
+      uses: oracle-actions/run-oci-cli-command@v1.3.2
+      with:
+        command: 'iam region list'
+    - name: Write OCI CLI config file
+      env:
+        OCI_TENANCY: ${{ secrets.OCI_TENANCY }}
+        OCI_USER: ${{ secrets.OCI_USER }}
+        OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+        OCI_REGION: ${{ secrets.OCI_REGION }}
+        OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+      run: |
+        # The Terraform OCI provider authenticates via $HOME/.oci/config
+        # (the run-oci-cli-command action uses OCI_CLI_* env vars instead).
+        mkdir -p "$HOME/.oci"
+        cat > "$HOME/.oci/config" <<EOF
+        [DEFAULT]
+        user=${OCI_USER}
+        fingerprint=${OCI_FINGERPRINT}
+        tenancy=${OCI_TENANCY}
+        region=${OCI_REGION}
+        key_file=$HOME/.oci/key.pem
+        EOF
+        printf '%s\n' "${OCI_PRIVATE_KEY}" > "$HOME/.oci/key.pem"
+        chmod 600 "$HOME/.oci/config" "$HOME/.oci/key.pem"
+    - name: Cache Terraform Plugin Dir
+      uses: actions/cache@v5
+      with:
+        path: ${{ github.workspace }}/.terraform.d/plugin-cache
+        key: terraform-plugin-cache-${{ runner.os }}-${{ hashFiles('terraform/.terraform.lock.hcl', 'terraform/infra/.terraform.lock.hcl') }}
+        restore-keys: |
+          terraform-plugin-cache-${{ runner.os }}-
+    - name: Recreate OKE kubeconfig
+      env:
+        TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        OCI_REGION: ${{ secrets.OCI_REGION }}
+      run: |
+        set -e
+
+        echo "Configuring Terraform to use plugin cache"
+        mkdir -p ${{ github.workspace }}/.terraform.d/plugin-cache
+        echo "plugin_cache_dir = \"${{ github.workspace }}/.terraform.d/plugin-cache\"" > ~/.terraformrc
+
+        echo "Initializing infra state to read cluster id"
+        terraform init
+        CLUSTER_ID=$(terraform output -raw cluster_id)
+        echo "Retrieved cluster id: ${CLUSTER_ID}"
+
+        echo "Generating kubeconfig for the cluster"
+        oci ce cluster create-kubeconfig \
+          --cluster-id "${CLUSTER_ID}" \
+          --file ${{ github.workspace }}/terraform/kubeconfig \
+          --region "${OCI_REGION}" \
+          --token-version 2.0.0
+      working-directory: ./terraform/infra
+    - name: Destroy OKE Kubernetes resources (in-cluster)
+      env:
+        TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+      run: |
+        set -e
+
+        TF_VAR_cluster_name=$(cd infra && terraform output -raw cluster_name)
+        export TF_VAR_cluster_name
+
+        cat <<EOF > terraform.tfvars.json
+        {
+          "cloudflare_api_token": "${{ secrets.CLOUDFLARE_TOKEN }}",
+          "cloudflare_zone_id": "${{ secrets.CLOUDFLARE_ZONE_ID }}",
+          "datadog_api_key": "${{ secrets.DATADOG_API_KEY }}",
+          "datadog_app_key": "${{ secrets.DATADOG_APP_KEY }}",
+          "postgres_pass": "${{ secrets.POSTGRES_PASS }}",
+          "redis_pass": "${{ secrets.REDIS_PASS }}"
+        }
+        EOF
+
+        echo "Initializing and validating Terraform configuration"
+        terraform init
+        terraform validate
+
+        echo "Attempting to destroy Terraform Resources (max 3 attempts)..."
+        for destroy in {1..3}; do
+          echo "Attempt $destroy..."
+          terraform destroy --auto-approve && break || {
+            echo "Terraform destroy failed (attempt $destroy)."
+            if [ "$destroy" -lt 3 ]; then
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            else
+              echo "All attempts failed..."
+              exit 1
+            fi
+          }
+        done
+      working-directory: ./terraform
+    - name: Destroy OCI infrastructure (cluster, network)
+      env:
+        TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        TF_VAR_oci_tenancy_ocid: ${{ secrets.OCI_TENANCY }}
+        TF_VAR_oci_compartment_ocid: ${{ secrets.OCI_COMPARTMENT }}
+        TF_VAR_oci_region: ${{ secrets.OCI_REGION }}
+      run: |
+        set -e
+
+        echo "Configuring Terraform to use plugin cache"
+        mkdir -p ${{ github.workspace }}/.terraform.d/plugin-cache
+        echo "plugin_cache_dir = \"${{ github.workspace }}/.terraform.d/plugin-cache\"" > ~/.terraformrc
+
+        echo "Initializing and validating Terraform configuration"
+        terraform init
+        terraform validate
+
+        echo "Attempting to destroy Terraform Resources (max 3 attempts)..."
+        for destroy in {1..3}; do
+          echo "Attempt $destroy..."
+          terraform destroy --auto-approve && break || {
+            echo "Terraform destroy failed (attempt $destroy)."
+            if [ "$destroy" -lt 3 ]; then
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            else
+              echo "All attempts failed..."
+              exit 1
+            fi
+          }
+        done
+      working-directory: ./terraform/infra
+    - name: Commit Terraform Lock Files
+      uses: stefanzweifel/git-auto-commit-action@v7
+      with:
+        commit_message: "chore: update terraform.lock.hcl"
+        file_pattern: "terraform/.terraform.lock.hcl terraform/infra/.terraform.lock.hcl"
+        commit_user_name: "github-actions[bot]"
+        commit_user_email: "github-actions[bot]@users.noreply.github.com"

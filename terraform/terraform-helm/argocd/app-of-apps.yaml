@@ -1,0 +1,84 @@
+applications:
+  http-redirect:
+    namespace: gitops
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "-2"
+    project: default
+    syncPolicy:
+      automated:
+        selfHeal: true
+    source:
+      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      targetRevision: main
+      path: manifests/argo-parent/
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: kube-system
+  parent:
+    namespace: gitops
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "-1"
+    project: default
+    syncPolicy:
+      automated:
+        selfHeal: true
+      retry:
+        limit: 5
+        backoff:
+          duration: 5s
+          maxDuration: 3m0s
+          factor: 2
+    sources:
+    - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argocd-apps
+      targetRevision: 2.0.4
+      helm:
+        valueFiles:
+          - $values/argocd-helm/argocd-apps/monitoring-values.yaml
+          - $values/argocd-helm/argocd-apps/app-values.yaml
+          - $values/argocd-helm/argocd-apps/chaos-values.yaml
+        parameters:
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[0].name
+            value: prometheus.prometheusSpec.externalUrl
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[0].value
+            value: "https://${prometheus_hostname}"
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[1].name
+            value: prometheus.route.main.hostnames[0]
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[1].value
+            value: ${prometheus_hostname}
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[2].name
+            value: alertmanager.alertmanagerSpec.externalUrl
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[2].value
+            value: "https://${alertmanager_hostname}"
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[3].name
+            value: alertmanager.route.main.hostnames[0]
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[3].value
+            value: ${alertmanager_hostname}
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[4].name
+            value: grafana.grafana\.ini.server.root_url
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[4].value
+            value: "https://${grafana_hostname}"
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[5].name
+            value: grafana.route.main.hostnames[0]
+          - name: applications.kube-prom-stack.sources[1].helm.parameters[5].value
+            value: ${grafana_hostname}
+          - name: applications.datadog.sources[1].helm.parameters[0].name
+            value: datadog.clusterName
+          - name: applications.datadog.sources[1].helm.parameters[0].value
+            value: ${cluster_name}
+          - name: applications.kronos.source.kustomize.patches[0].patch
+            value: |-
+              - op: add
+                path: /spec/hostnames
+                value: 
+                  - ${kronos_hostname}
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: gitops

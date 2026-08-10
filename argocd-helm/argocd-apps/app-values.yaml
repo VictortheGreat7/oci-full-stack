@@ -1,0 +1,97 @@
+projects:
+  kronos:
+    namespace: gitops
+    description: Project for Kronos World Clock application
+    finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "4"
+    sourceRepos:
+      - "https://github.com/VictortheGreat7/digital-ocean-full-stack.git"
+      - "https://charts.bitnami.com/bitnami"
+    destinations:
+      - server: https://kubernetes.default.svc
+        namespace: kronos
+    clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+applications:
+  # redis:
+  #   namespace: gitops
+  #   project: kronos
+  #   additionalAnnotations:
+  #     argocd.argoproj.io/sync-wave: "5"
+  #   finalizers:
+  #   - resources-finalizer.argocd.argoproj.io
+  #   syncPolicy:
+  #     automated:
+  #       selfHeal: true
+  #     syncOptions:
+  #       - CreateNamespace=true
+  #   sources:
+  #     - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+  #       targetRevision: main
+  #       ref: values
+  #     - repoURL: https://charts.bitnami.com/bitnami
+  #       chart: redis
+  #       targetRevision: 27.0.14
+  #       helm:
+  #         valueFiles:
+  #           - $values/argocd-helm/redis/values.yaml
+  #   destination:
+  #     server: https://kubernetes.default.svc
+  #     namespace: kronos
+  postgres:
+    namespace: gitops
+    project: kronos
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "5"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+    sources:
+      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+        targetRevision: main
+        path: manifests/kronos-app/postgres
+      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+        targetRevision: main
+        ref: values
+      - repoURL: https://charts.bitnami.com/bitnami
+        chart: postgresql
+        targetRevision: 18.8.0
+        helm:
+          valueFiles:
+            - $values/argocd-helm/postgres/values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: kronos
+  kronos:
+    namespace: gitops
+    project: kronos
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "6"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+    source:
+      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      targetRevision: main
+      path: manifests/kronos-app
+      kustomize:
+        patches:
+          - target:
+              group: gateway.networking.k8s.io
+              version: v1
+              kind: HTTPRoute
+              name: kronos-https-route
+              namespace: kronos
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: kronos

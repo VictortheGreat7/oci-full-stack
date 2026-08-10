@@ -1,0 +1,135 @@
+datadog:
+  # networkPolicy:
+  #   create: true
+  #   flavor: cilium
+
+  apiKeyExistingSecret: datadog-secret
+  appKeyExistingSecret: datadog-secret
+  site: us5.datadoghq.com
+
+
+  logs_enabled: true
+  logs:
+    enabled: true
+    containerCollectAll: true
+    autoMultiLineDetection: true
+
+  ignoreAutoConfig:
+    - cilium
+
+  confd:
+    cilium.yaml: |
+      ad_identifiers:
+        - cilium-agent
+      init_config:
+      instances:
+        - prometheus_url: http://%%host%%:9090/metrics
+          tags:
+            - "component:cilium-agent"
+    postgres.yaml: |
+      ad_identifiers:
+        - postgres
+      init_config:
+      instances:
+        - host: "%%host%%"
+          port: 5432
+          username: "datadog"
+          password: "datadog"
+          dbname: "kronos"
+          dbm: true
+          database_autodiscovery:
+            enabled: true
+          collect_schemas:
+            enabled: true
+          relations:
+            - relation_regex: .*
+
+  tags:
+    - "env:dev"
+
+  networkMonitoring:
+    enabled: true
+  traceroute:
+    enabled: true
+  networkPath:
+    connectionsMonitoring:
+      enabled: true
+
+  processAgent:
+    enabled: true
+    processCollection: true
+
+  apm:
+    portEnabled: true
+    peerServiceAggregation: true
+    peerTagsAggregation: true
+    computeStatsBySpanKind: true
+
+  orchestratorExplorer:
+    enabled: true
+
+  podLabelAsTags:
+    app: app
+    component: component
+    environment: env
+
+  otelCollector:
+    enabled: true
+    ports:
+      - name: otlp-grpc
+        containerPort: 4317
+        hostPort: 4317
+      - name: otlp-http
+        containerPort: 4318
+        hostPort: 4318
+    configMap:
+      name: otel-agent-config-map
+
+agents:
+  containers:
+    agent:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    traceAgent:
+      resources:
+        limits:
+          cpu: 50m
+          memory: 200Mi
+    otelAgent:
+      resources:
+        limits:
+          cpu: 50m
+          memory: 200Mi
+    processAgent:
+      resources:
+        limits:
+          cpu: 50m
+          memory: 200Mi
+    systemProbe:
+      resources:
+        limits:
+          cpu: 50m
+          memory: 400Mi
+
+operator:
+  apiKeyExistingSecret: datadog-secret
+  appKeyExistingSecret: datadog-secret
+
+  datadogCRDs:
+    crds:
+      datadogAgents: true
+      datadogAgentInternals: true
+      datadogDashboards: true
+
+  datadogAgent:
+    enabled: true
+
+  datadogAgentInternal:
+    enabled: true
+
+  datadogDashboard:
+    enabled: true
+
+  watchNamespaces: ""

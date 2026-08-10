@@ -1,0 +1,15 @@
+provider:
+  name: cloudflare
+sources:
+  - gateway-httproute
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api
+        key: api-token
+policy: sync
+txtOwnerId: "gateway"
+extraArgs:
+  - --gateway-namespace=kube-system
+  - --cloudflare-proxied

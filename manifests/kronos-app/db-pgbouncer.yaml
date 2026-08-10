@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgbouncer-config
+  namespace: kronos
+data:
+  pgbouncer.ini: |
+    [databases]
+    kronos = host=postgres-postgresql-primary.kronos.svc.cluster.local port=5432 dbname=kronos
+
+    [pgbouncer]
+    listen_addr = 0.0.0.0
+    listen_port = 5432
+    auth_type = scram-sha-256
+    auth_file = /etc/pgbouncer/users.txt
+    stats_users = app
+    pool_mode = transaction
+    max_client_conn = 100
+    reserve_pool_size = 5
+    reserve_pool_timeout = 1
+    min_pool_size = 5
+    default_pool_size = 48
+    max_db_connections = 50
+    server_connect_timeout = 15
+    ignore_startup_parameters = extra_float_digits,options
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kronos-pgbouncer
+  namespace: kronos
+  labels:
+    app: kronos-app
+    component: pgbouncer
+    environment: development
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kronos-app
+      component: pgbouncer
+      environment: development
+  template:
+    metadata:
+      labels:
+        app: kronos-app
+        component: pgbouncer
+        environment: development
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            component: pgbouncer
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.28
+          command: 
+            - 'sh'
+            - '-c'
+            - 'until nc -z postgres-postgresql-primary.kronos.svc.cluster.local 5432; do echo waiting for postgres; sleep 2; done;'
+      containers:
+        - name: pgbouncer
+          image: edoburu/pgbouncer:latest
+          ports:
+            - containerPort: 5432
+              name: pgbouncer
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pgbouncer/pgbouncer.ini
+              subPath: pgbouncer.ini
+            - name: auth
+              mountPath: /etc/pgbouncer/users.txt
+              subPath: users.txt
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 5
+            periodSeconds: 5
+        - name: pgbouncer-exporter
+          image: prometheuscommunity/pgbouncer-exporter:latest
+          ports:
+            - containerPort: 9127
+              name: metrics
+          env:
+            - name: PGBOUNCER_EXPORTER_LISTEN_ADDR
+              value: "0.0.0.0:9127"
+            - name: PGBOUNCER_EXPORTER_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: pgbouncer-auth
+                  key: exporter_connection_string
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9127
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9127
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: pgbouncer-config
+        - name: auth
+          secret:
+            secretName: pgbouncer-auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kronos-pgbouncer-svc
+  namespace: kronos
+  labels:
+    app: kronos-app
+    component: pgbouncer
+    environment: development
+spec:
+  selector:
+    app: kronos-app
+    component: pgbouncer
+    environment: development
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: pgbouncer
+    - port: 9127
+      targetPort: 9127
+      protocol: TCP
+      name: metrics
+  type: ClusterIP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kronos-pgbouncer-pdb
+  namespace: kronos
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: kronos-app
+      component: pgbouncer
+      environment: development
+

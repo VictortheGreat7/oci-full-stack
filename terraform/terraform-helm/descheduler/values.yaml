@@ -1,0 +1,36 @@
+kind: CronJob
+
+cronJob:
+  schedule: "*/5 * * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+
+deschedulerPolicy:
+  metricsProviders:
+    - source: KubernetesMetrics
+  
+  profiles:
+    - name: RealUsageBalancing
+      pluginConfig:
+        - name: DefaultEvictor
+          args:
+            nodeFit: true
+            labelSelector:
+              matchExpressions:
+                - key: runner
+                  operator: NotIn
+                  values:
+                    - "true"
+        - name: LowNodeUtilization
+          args:
+            metricsUtilization:
+              metricsServer: true
+            thresholds:
+              cpu: 70
+            targetThresholds:
+              cpu: 80
+      plugins:
+        balance:
+          enabled:
+            - LowNodeUtilization

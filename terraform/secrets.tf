@@ -1,0 +1,146 @@
+resource "kubernetes_namespace_v1" "secrets" {
+  metadata {
+    name = "secrets"
+  }
+}
+
+resource "helm_release" "reflector" {
+  name             = "reflector"
+  repository       = "https://emberstack.github.io/helm-charts"
+  chart            = "reflector"
+  namespace        = kubernetes_namespace_v1.secrets.metadata[0].name
+  create_namespace = false
+  atomic           = true
+  cleanup_on_fail  = true
+
+  wait    = true
+  timeout = 600
+}
+
+resource "kubernetes_secret_v1" "cloudflare_api" {
+  metadata {
+    name      = "cloudflare-api"
+    namespace = "secrets"
+    annotations = {
+      "reflector.v1.k8s.emberstack.com/reflection-auto-enabled"       = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-auto-namespaces"    = "cert-manager,kube-system"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "cert-manager,kube-system"
+    }
+  }
+
+  data = {
+    api-token = var.cloudflare_api_token
+  }
+
+  type = "Opaque"
+
+  depends_on = [helm_release.reflector]
+}
+
+resource "kubernetes_secret_v1" "datadog_secret" {
+  metadata {
+    name      = "datadog-secret"
+    namespace = "secrets"
+    annotations = {
+      "reflector.v1.k8s.emberstack.com/reflection-auto-enabled"       = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-auto-namespaces"    = "monitoring"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "monitoring"
+    }
+  }
+
+  data = {
+    api-key = var.datadog_api_key
+    app-key = var.datadog_app_key
+  }
+
+  type = "Opaque"
+
+  depends_on = [helm_release.reflector]
+}
+
+resource "kubernetes_secret_v1" "postgres_pass" {
+  metadata {
+    name      = "postgres-secret"
+    namespace = "secrets"
+    annotations = {
+      "reflector.v1.k8s.emberstack.com/reflection-auto-enabled"       = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-auto-namespaces"    = "kronos"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "kronos"
+    }
+  }
+
+  data = {
+    password = var.postgres_pass
+  }
+
+  type = "Opaque"
+
+  depends_on = [helm_release.reflector]
+}
+
+resource "kubernetes_secret_v1" "pgbouncer_auth" {
+  metadata {
+    name      = "pgbouncer-auth"
+    namespace = "secrets"
+    annotations = {
+      "reflector.v1.k8s.emberstack.com/reflection-auto-enabled"       = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-auto-namespaces"    = "kronos"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "kronos"
+    }
+  }
+
+  data = {
+    exporter_connection_string = "postgresql://app:${var.postgres_pass}@localhost:5432/pgbouncer?sslmode=disable"
+    "users.txt"                = <<-EOT
+      "app" "${var.postgres_pass}"
+    EOT
+  }
+
+  type = "Opaque"
+
+  depends_on = [helm_release.reflector]
+}
+
+resource "kubernetes_secret_v1" "redis_pass" {
+  metadata {
+    name      = "redis-secret"
+    namespace = "secrets"
+    annotations = {
+      "reflector.v1.k8s.emberstack.com/reflection-auto-enabled"       = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-auto-namespaces"    = "kronos"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
+      "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "kronos"
+    }
+  }
+
+  data = {
+    password = var.redis_pass
+  }
+
+  type = "Opaque"
+
+  depends_on = [helm_release.reflector]
+}
+
+# resource "kubernetes_secret_v1" "oci_creds" {
+#   metadata {
+#     name      = "oci-creds"
+#     namespace = "secrets"
+#     annotations = {
+#       "reflector.v1.k8s.emberstack.com/reflection-auto-enabled"       = "true"
+#       "reflector.v1.k8s.emberstack.com/reflection-auto-namespaces"    = "crossplane-system"
+#       "reflector.v1.k8s.emberstack.com/reflection-allowed"            = "true"
+#       "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces" = "crossplane-system"
+#     }
+#   }
+
+#   data = {
+#     "credentials" = var.oci_credentials_json
+#   }
+
+#   type = "Opaque"
+# }

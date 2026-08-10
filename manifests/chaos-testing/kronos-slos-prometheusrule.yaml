@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kronos-slos
+  namespace: monitoring
+  labels:
+    release: kube-prom-stack
+spec:
+  groups:
+    - name: slo.world_clocks
+      interval: 30s
+      rules:
+        # Availability SLI using k6 total requests and HTTP status codes
+        - record: sli:world_clocks:availability:ratio_rate5m
+          expr: 1 - (sum(rate(k6_http_reqs_total{endpoint="world-clocks", status=~"4..|5.."}[5m])) / clamp_min(sum(rate(k6_http_reqs_total{endpoint="world-clocks"}[5m])), 1))
+        
+        # Latency SLI using the pre-calculated custom k6 SLI ratio gauge instead of missing buckets
+        - record: sli:world_clocks:latency_500ms:ratio_rate5m
+          expr: avg_over_time(k6_sli_latency_vs_slo_ratio{endpoint="world-clocks"}[5m])
+        
+        - record: burn:world_clocks:availability:1h
+          expr: (1 - sli:world_clocks:availability:ratio_rate5m) / 0.001
+        - record: burn:world_clocks:availability:6h
+          expr: (1 - sli:world_clocks:availability:ratio_rate5m) / 0.001
+        - record: burn:world_clocks:latency:1h
+          expr: (1 - sli:world_clocks:latency_500ms:ratio_rate5m) / 0.01
+        - record: burn:world_clocks:latency:6h
+          expr: (1 - sli:world_clocks:latency_500ms:ratio_rate5m) / 0.01
+
+    - name: slo.alerts
+      rules:
+        - alert: WorldClocksAvailabilityBurnRateHigh
+          expr: burn:world_clocks:availability:1h > 14.4 and burn:world_clocks:availability:6h > 6
+          for: 5m
+          labels:
+            severity: page
+          annotations:
+            summary: World-clocks availability SLO burn rate high
+            description: Error budget burn rate indicates a likely SLO violation if sustained.
+        
+        - alert: WorldClocksLatencyBurnRateHigh
+          expr: burn:world_clocks:latency:1h > 14.4 and burn:world_clocks:latency:6h > 6
+          for: 5m
+          labels:
+            severity: page
+          annotations:
+            summary: World-clocks latency SLO burn rate high
+            description: Latency budget is being consumed too quickly.

@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kronos-backend
+  namespace: kronos
+  labels:
+    app: kronos-app
+    component: backend
+    environment: development
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: kronos-app
+      component: backend
+      environment: development
+  template:
+    metadata:
+      labels:
+        app: kronos-app
+        component: backend
+        environment: development
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            component: backend
+      initContainers:
+        - name: wait-for-pqbouncer
+          image: busybox:1.28
+          command: 
+            - 'sh'
+            - '-c'
+            - 'until nc -z kronos-pgbouncer-svc.kronos.svc.cluster.local 5432; do echo waiting for postgres; sleep 2; done;'
+        - name: wait-for-datadog
+          image: busybox:1.28
+          command: 
+            - 'sh'
+            - '-c'
+            - 'until nc -z datadog.monitoring.svc.cluster.local 4318 && nc -z datadog.monitoring.svc.cluster.local 8126; do echo waiting for datadog; sleep 2; done;'
+      containers:
+        - name: backend
+          image: victorthegreat7/kronos-backend:latest
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: kronos-backend
+            - name: OTEL_K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: OTEL_K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: OTEL_K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: DEPLOYMENT_ENV
+              value: dev
+            - name: SERVICE_VERSION
+              value: 1.0.0
+            - name: DD_DOGSTATSD_PORT
+              value: "8125"
+            - name: DD_DOGSTATSD_URL
+              value: udp://datadog.monitoring.svc.cluster.local:8125
+            - name: DD_TRACE_AGENT_URL
+              value: http://datadog.monitoring.svc.cluster.local:8126
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://datadog.monitoring.svc.cluster.local:4318/v1/traces
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.version=$(SERVICE_VERSION),deployment.environment=$(DEPLOYMENT_ENV),service.name=$(OTEL_SERVICE_NAME),k8s.namespace.name=$(OTEL_K8S_NAMESPACE),k8s.pod.name=$(OTEL_K8S_POD_NAME),host.name=$(OTEL_K8S_NODE_NAME)
+            - name: DD_RUNTIME_METRICS_ENABLED
+              value: "false"
+            - name: DD_RUNTIME_METRICS_RUNTIME_ID_ENABLED
+              value: "false"
+            - name: DD_PROFILING_ENABLED
+              value: "false"
+            - name: DB_HOST
+              value: kronos-pgbouncer-svc.kronos.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: kronos
+            - name: DB_USER
+              value: app
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: CACHE_ENABLED
+              value: "false"
+            - name: REDIS_SENTINELS
+              value: redis-node-0.redis-headless.kronos.svc.cluster.local:26379,redis-node-1.redis-headless.kronos.svc.cluster.local:26379,redis-node-2.redis-headless.kronos.svc.cluster.local:26379
+            - name: REDIS_MASTER_SET
+              value: foreman
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: password
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              memory: 400Mi
+              cpu: 1000m
+            limits:
+              memory: 512Mi
+              cpu: 1500m
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 8
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]  # give the app time to finish processing in-flight requests and flush telemetry before SIGTERM
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kronos-backend-pdb
+  namespace: kronos
+spec:
+  minAvailable: 6
+  selector:
+    matchLabels:
+      app: kronos-app
+      component: backend
+      environment: development

@@ -1,0 +1,74 @@
+projects:
+  chaos-testing:
+    namespace: gitops
+    description: Project for chaos testing applications
+    finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "6"
+    sourceRepos:
+      - "https://github.com/VictortheGreat7/digital-ocean-full-stack.git"
+      - "https://grafana.github.io/helm-charts"
+    destinations:
+      - server: https://kubernetes.default.svc
+        namespace: chaos
+      - server: https://kubernetes.default.svc
+        namespace: default
+      - server: https://kubernetes.default.svc
+        namespace: monitoring
+    clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: '*'
+      kind: CustomResourceDefinition
+    - group: '*'
+      kind: ClusterRole
+    - group: '*'
+      kind: ClusterRoleBinding
+applications:
+  chaos-operator:
+    namespace: gitops
+    project: chaos-testing
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "7"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+      syncOptions:
+        - CreateNamespace=true
+    sources:
+      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+        targetRevision: main
+        ref: values
+      - repoURL: https://grafana.github.io/helm-charts
+        chart: k6-operator
+        targetRevision: 4.2.0
+        helm:
+          valueFiles:
+            - $values/argocd-helm/chaos-operator/values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: chaos
+
+  chaos-test:
+    namespace: gitops
+    project: chaos-testing
+    additionalAnnotations:
+      argocd.argoproj.io/depends-on: chaos-operator
+      argocd.argoproj.io/sync-wave: "8"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: true
+    source:
+      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      targetRevision: main
+      path: manifests/chaos-testing
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: chaos
+  

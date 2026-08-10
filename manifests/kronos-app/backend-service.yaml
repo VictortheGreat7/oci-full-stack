@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kronos-backend-svc
+  namespace: kronos
+  labels:
+    app: kronos-app
+    component: backend
+    environment: development
+spec:
+  selector:
+    app: kronos-app
+    component: backend
+    environment: development
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: ClusterIP

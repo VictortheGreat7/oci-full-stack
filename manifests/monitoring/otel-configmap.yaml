@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-agent-config-map
+  namespace: monitoring
+data:
+  otel-config.yaml: |
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: "datadog-agent"
+              scrape_interval: 10s
+              static_configs:
+                - targets:
+                    - 0.0.0.0:8888
+            - job_name: "kronos-backend"
+              scrape_interval: 15s
+              metrics_path: /metrics
+              static_configs:
+                - targets:
+                    - kronos-backend-svc.kronos.svc.cluster.local:80
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    exporters:
+      debug:
+        verbosity: detailed
+      datadog:
+        api:
+          key: "${env:DD_API_KEY}"
+          site: ${env:DD_SITE}
+        sending_queue:
+          batch:
+            flush_timeout: 10s
+    processors:
+      infraattributes:
+        cardinality: 2
+    connectors:
+      datadog/connector:
+        traces:
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [infraattributes]
+          exporters: [datadog, datadog/connector]
+        metrics:
+          receivers: [otlp, datadog/connector, prometheus]
+          processors: [infraattributes]
+          exporters: [datadog]
+        logs:
+          receivers: [otlp]
+          processors: [infraattributes]
+          exporters: [datadog]

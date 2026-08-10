@@ -1,0 +1,64 @@
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: kronos-loadtest
+  namespace: default
+spec:
+  cleanup: post
+  parallelism: 3
+  runner:
+    image: grafana/k6:latest
+    affinity:
+      # Push K6 pods away from each other so they spread across all 3 nodes evenly
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: runner
+              operator: In
+              values:
+              - "true"
+          topologyKey: kubernetes.io/hostname
+    resources:
+      requests:
+        cpu: 400m
+        memory: 1Gi
+      limits:
+        cpu: 550m
+        memory: 1512Mi
+    env:
+      - name: BASE_URL
+        value: https://kronos.mywonderworks.tech
+      - name: TEST_TYPE
+        value: soak
+      - name: K6_OUT
+        value: experimental-prometheus-rw,opentelemetry
+      - name: K6_PROMETHEUS_RW_PUSH_INTERVAL
+        value: 10s
+      - name: K6_PROMETHEUS_RW_SERVER_URL
+        value: http://kube-prom-stack-kube-prome-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+      - name: K6_OTEL_GRPC_EXPORTER_ENDPOINT
+        value: datadog.monitoring.svc.cluster.local:4317
+      - name: K6_OTEL_GRPC_EXPORTER_INSECURE
+        value: "true"
+      - name: K6_OTEL_METRIC_PREFIX
+        value: "direct_k6_"
+      - name: K6_PROMETHEUS_RW_TREND_STATS
+        value: p(95),p(99),min,max,avg
+      - name: K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM
+        value: "true"
+  script:
+    configMap:
+      name: k6-test-script
+      file: loadtest.js
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kronos-loadtest-pdb
+  namespace: default
+spec:
+  minAvailable: 3
+  selector:
+    matchLabels:
+      k6_cr: kronos-loadtest

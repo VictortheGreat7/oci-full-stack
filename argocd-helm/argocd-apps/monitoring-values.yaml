@@ -1,0 +1,151 @@
+projects:
+  monitoring:
+    namespace: gitops
+    description: Project for monitoring applications
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "0"
+    finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    sourceRepos:
+      - "https://github.com/VictortheGreat7/digital-ocean-full-stack.git"
+      - "https://github.com/prometheus-operator/kube-prometheus"
+      - "https://prometheus-community.github.io/helm-charts"
+      - "https://helm.datadoghq.com"
+    destinations:
+      - server: https://kubernetes.default.svc
+        namespace: monitoring
+      - server: https://kubernetes.default.svc
+        namespace: kube-system
+    clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: '*'
+      kind: CustomResourceDefinition
+    - group: '*'
+      kind: ClusterRole
+    - group: '*'
+      kind: ClusterRoleBinding
+    - group: '*'
+      kind: ValidatingWebhookConfiguration
+    - group: '*'
+      kind: MutatingWebhookConfiguration
+
+applications:
+  otel-config:
+    namespace: gitops
+    project: monitoring
+    additionalAnnotations:
+      argocd.argoproj.io/sync-wave: "1"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+      syncOptions:
+        - CreateNamespace=true
+    source:
+      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      targetRevision: main
+      path: manifests/monitoring/
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: monitoring
+
+  kube-prom-stack:
+    namespace: gitops
+    project: monitoring
+    additionalAnnotations:
+      argocd.argoproj.io/depends-on: "otel-config"
+      argocd.argoproj.io/sync-wave: "2"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: false
+        prune: true
+      syncOptions:
+        - ServerSideApply=true
+    ignoreDifferences:
+      - group: gateway.networking.k8s.io
+        kind: HTTPRoute
+        jqPathExpressions:
+          - .spec.parentRefs[]?.group
+          - .spec.parentRefs[]?.kind
+          - .spec.rules[]?.backendRefs[]?.group
+          - .spec.rules[]?.backendRefs[]?.kind
+          - .spec.rules[]?.backendRefs[]?.weight
+    sources:
+      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+        targetRevision: main
+        ref: values
+      - repoURL: https://prometheus-community.github.io/helm-charts
+        chart: kube-prometheus-stack
+        targetRevision: 81.6.7
+        helm:
+          valueFiles:
+            - $values/argocd-helm/kube-prom-stack/values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: monitoring
+
+  datadog:
+    namespace: gitops
+    project: monitoring
+    additionalAnnotations:
+      argocd.argoproj.io/depends-on: "otel-config"
+      argocd.argoproj.io/sync-wave: "3"
+    finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+      syncOptions:
+        - ServerSideApply=true
+    ignoreDifferences:
+    # Ignore non-deterministic telemetry values
+    - group: ""
+      kind: ConfigMap
+      name: datadog-kpi-telemetry-configmap
+      namespace: monitoring
+      jsonPointers:
+        - /data/install_id
+        - /data/install_time
+    
+    # Secret (Datadog cluster-agent token changes)
+    - group: ""
+      kind: Secret
+      name: datadog-cluster-agent
+      namespace: monitoring
+      jsonPointers:
+        - /data/token
+
+    # Ignore some checksum-based rollout annotations on agent DaemonSet
+    - group: apps
+      kind: DaemonSet
+      name: datadog
+      namespace: monitoring
+      jqPathExpressions:
+        - .spec.template.metadata.annotations["checksum/clusteragent_token"]
+
+    # Ignore all checksum-based rollout annotations on cluster agent
+    - group: apps
+      kind: Deployment
+      name: datadog-cluster-agent
+      namespace: monitoring
+      jqPathExpressions:
+        - .spec.template.metadata.annotations["checksum/clusteragent_token"]
+    sources:
+      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+        targetRevision: main
+        ref: values
+      - repoURL: https://helm.datadoghq.com
+        chart: datadog
+        targetRevision: 3.170.1
+        helm:
+          valueFiles:
+            - $values/argocd-helm/datadog/values.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: monitoring
