@@ -25,7 +25,6 @@ resource "oci_containerengine_cluster" "kronos" {
   endpoint_config {
     is_public_ip_enabled = true
     subnet_id            = oci_core_subnet.api.id
-    nsg_ids              = [oci_core_security_list.api.id]
   }
 
   cluster_pod_network_options {
