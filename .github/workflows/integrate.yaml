@@ -242,6 +242,9 @@ jobs:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
           TF_VAR_oci_tenancy_ocid: ${{ secrets.OCI_TENANCY }}
           TF_VAR_oci_compartment_ocid: ${{ secrets.OCI_COMPARTMENT }}
+          TF_VAR_oci_user_ocid: ${{ secrets.OCI_USER }}
+          TF_VAR_oci_fingerprint: ${{ secrets.OCI_FINGERPRINT }}
+          TF_VAR_oci_private_key: ${{ secrets.OCI_PRIVATE_KEY }}
           TF_VAR_oci_region: ${{ secrets.OCI_REGION }}
         run: |
           set -e
