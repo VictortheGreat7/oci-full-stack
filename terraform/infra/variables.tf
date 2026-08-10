@@ -54,9 +54,9 @@ variable "cluster_name" {
 }
 
 variable "kubernetes_version" {
-  description = "Kubernetes version to install (empty = latest from the region)."
+  description = "Kubernetes version to install (empty = latest from the region). Must match the OKE worker node image in node_image_id."
   type        = string
-  default     = ""
+  default     = "v1.36.1"
 }
 
 variable "cni_type" {

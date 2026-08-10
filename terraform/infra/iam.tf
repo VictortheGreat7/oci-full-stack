@@ -30,7 +30,11 @@ resource "oci_identity_policy" "cluster_autoscaler" {
   description    = "Allow the OKE cluster autoscaler workload to manage its node pool."
 
   statements = [
-    "Allow any-user to manage cluster-node-pools in compartment id ${local.compartment_ocid} where request.principal.type = 'workload' AND request.principal.cluster_id = '${oci_containerengine_cluster.kronos.id}'",
-    "Allow any-user to read all-resources in compartment id ${local.compartment_ocid} where request.principal.type = 'workload' AND request.principal.cluster_id = '${oci_containerengine_cluster.kronos.id}'",
+    "Allow any-user to manage cluster-node-pools in compartment id ${local.compartment_ocid} where ALL {request.principal.type='workload', request.principal.namespace='kube-system', request.principal.service_account='cluster-autoscaler', request.principal.cluster_id='${oci_containerengine_cluster.kronos.id}'}",
+    "Allow any-user to manage instance-family in compartment id ${local.compartment_ocid} where ALL {request.principal.type='workload', request.principal.namespace='kube-system', request.principal.service_account='cluster-autoscaler', request.principal.cluster_id='${oci_containerengine_cluster.kronos.id}'}",
+    "Allow any-user to use subnets in compartment id ${local.compartment_ocid} where ALL {request.principal.type='workload', request.principal.namespace='kube-system', request.principal.service_account='cluster-autoscaler', request.principal.cluster_id='${oci_containerengine_cluster.kronos.id}'}",
+    "Allow any-user to read virtual-network-family in compartment id ${local.compartment_ocid} where ALL {request.principal.type='workload', request.principal.namespace='kube-system', request.principal.service_account='cluster-autoscaler', request.principal.cluster_id='${oci_containerengine_cluster.kronos.id}'}",
+    "Allow any-user to use vnics in compartment id ${local.compartment_ocid} where ALL {request.principal.type='workload', request.principal.namespace='kube-system', request.principal.service_account='cluster-autoscaler', request.principal.cluster_id='${oci_containerengine_cluster.kronos.id}'}",
+    "Allow any-user to inspect compartments in compartment id ${local.compartment_ocid} where ALL {request.principal.type='workload', request.principal.namespace='kube-system', request.principal.service_account='cluster-autoscaler', request.principal.cluster_id='${oci_containerengine_cluster.kronos.id}'}",
   ]
 }

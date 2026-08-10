@@ -2,7 +2,7 @@ locals {
   cluster_name = coalesce(var.cluster_name, "kronos-${random_pet.suffix.id}")
 
   # Latest K8s version supported by OKE in the region unless pinned.
-  kubernetes_version = var.kubernetes_version != "" ? var.kubernetes_version : data.oci_containerengine_cluster_option.kronos.kubernetes_versions[0]
+  kubernetes_version = var.kubernetes_version != "" ? var.kubernetes_version : data.oci_containerengine_cluster_option.kronos.kubernetes_versions[length(data.oci_containerengine_cluster_option.kronos.kubernetes_versions) - 1]
 
   availability_domain = data.oci_identity_availability_domains.kronos.availability_domains[0].name
 }
