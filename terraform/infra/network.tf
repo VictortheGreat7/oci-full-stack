@@ -163,6 +163,14 @@ resource "oci_core_security_list" "api" {
       max = 6443
     }
   }
+  ingress_security_rules {
+    protocol = "6"
+    source   = "${oci_core_nat_gateway.kronos.nat_ip}/32"
+    tcp_options {
+      min = 6443
+      max = 6443
+    }
+  }
   egress_security_rules {
     protocol    = "all"
     destination = "0.0.0.0/0"
