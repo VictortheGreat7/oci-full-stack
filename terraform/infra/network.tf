@@ -173,6 +173,15 @@ resource "oci_core_security_list" "api" {
       max = 6443
     }
   }
+  ingress_security_rules {
+    protocol = "1" # OCI identifier for ICMP
+    source   = "0.0.0.0/0"
+    
+    icmp_options {
+      type = 3
+      code = 4
+    }
+  }
   egress_security_rules {
     protocol    = "all"
     destination = "0.0.0.0/0"
@@ -214,6 +223,15 @@ resource "oci_core_security_list" "nodes" {
     tcp_options {
       min = 10256
       max = 10256
+    }
+  }
+  ingress_security_rules {
+    protocol = "1" # OCI identifier for ICMP
+    source   = "0.0.0.0/0"
+    
+    icmp_options {
+      type = 3
+      code = 4
     }
   }
   egress_security_rules {
