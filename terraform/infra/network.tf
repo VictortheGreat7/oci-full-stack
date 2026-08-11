@@ -95,23 +95,25 @@ resource "oci_core_subnet" "api" {
 }
 
 resource "oci_core_subnet" "nodes" {
-  compartment_id    = local.compartment_ocid
-  vcn_id            = oci_core_vcn.kronos.id
-  cidr_block        = local.nodes_subnet_cidr
-  display_name      = "${local.cluster_name}-nodes-subnet"
-  dns_label         = "nodes"
-  route_table_id    = oci_core_route_table.private.id
-  security_list_ids = [oci_core_security_list.nodes.id]
+  compartment_id             = local.compartment_ocid
+  vcn_id                     = oci_core_vcn.kronos.id
+  cidr_block                 = local.nodes_subnet_cidr
+  display_name               = "${local.cluster_name}-nodes-subnet"
+  dns_label                  = "nodes"
+  route_table_id             = oci_core_route_table.private.id
+  security_list_ids          = [oci_core_security_list.nodes.id]
+  prohibit_public_ip_on_vnic = true
 }
 
 resource "oci_core_subnet" "pods" {
-  compartment_id    = local.compartment_ocid
-  vcn_id            = oci_core_vcn.kronos.id
-  cidr_block        = local.pods_subnet_cidr
-  display_name      = "${local.cluster_name}-pods-subnet"
-  dns_label         = "pods"
-  route_table_id    = oci_core_route_table.private.id
-  security_list_ids = [oci_core_security_list.pods.id]
+  compartment_id             = local.compartment_ocid
+  vcn_id                     = oci_core_vcn.kronos.id
+  cidr_block                 = local.pods_subnet_cidr
+  display_name               = "${local.cluster_name}-pods-subnet"
+  dns_label                  = "pods"
+  route_table_id             = oci_core_route_table.private.id
+  security_list_ids          = [oci_core_security_list.pods.id]
+  prohibit_public_ip_on_vnic = true
 }
 
 # --- Security lists (keep ports minimal) ---
