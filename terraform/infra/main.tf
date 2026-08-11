@@ -66,7 +66,7 @@ resource "oci_containerengine_node_pool" "kronos" {
 
   node_source_details {
     source_type             = "IMAGE"
-    image_id                = var.node_image_id # OKE Oracle-Linux-9.8 x86 image (us-ashburn-1)
+    image_id                = data.oci_core_images.oke_nodes.images[0].id
     boot_volume_size_in_gbs = var.node_disk_size_gbs
   }
 
