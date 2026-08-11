@@ -24,21 +24,42 @@ module "oke" {
   }
 
   # --- Tenancy / Compartment ---
+  # tenancy_id is required: the module resolves it to the literal "unknown" if
+  # unset, which makes dynamic-group creation (compartment_id = tenancy_id) fail
+  # with 404-NotAuthorizedOrNotFound.
+  tenancy_id     = var.oci_tenancy_ocid
   compartment_id = var.oci_compartment_ocid
   region         = var.oci_region
 
   # --- Cluster ---
-  cluster_name                   = local.cluster_name
-  cluster_type                   = "enhanced"
-  kubernetes_version             = var.kubernetes_version
-  cni_type                       = var.cni_type # "flannel" required for the module's built-in Cilium support
-  control_plane_is_public        = true
+  cluster_name                      = local.cluster_name
+  cluster_type                      = "enhanced"
+  kubernetes_version                = var.kubernetes_version
+  cni_type                          = var.cni_type # "flannel" required for the module's built-in Cilium support
+  control_plane_is_public           = true
   assign_public_ip_to_control_plane = true # easy kubectl access to the public API endpoint
-  output_detail                  = true      # expose cluster_kubeconfig / detailed outputs
+  output_detail                     = true # expose cluster_kubeconfig / detailed outputs
 
   # --- SSH keys for the internal bastion -> operator deployment plumbing ---
   ssh_public_key  = tls_private_key.ssh.public_key_openssh
   ssh_private_key = tls_private_key.ssh.private_key_pem
+
+  # VM.Standard.E4.Flex (the module default for both) is not offered in this
+  # region; overriding to E5.Flex avoids 404-NotAuthorizedOrNotFound on launch.
+  bastion_shape = {
+    shape                     = "VM.Standard.E5.Flex"
+    ocpus                     = 1
+    memory                    = 4
+    boot_volume_size          = 50
+    baseline_ocpu_utilization = 100
+  }
+  operator_shape = {
+    shape                     = "VM.Standard.E5.Flex"
+    ocpus                     = 1
+    memory                    = 4
+    boot_volume_size          = 50
+    baseline_ocpu_utilization = 100
+  }
 
   # --- IAM (dynamic groups + policies for the operator and Cluster Autoscaler) ---
   # Always created: the operator (used to deploy Cilium/autoscaler) needs its IAM
