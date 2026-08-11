@@ -2,6 +2,7 @@
 variable "oci_tenancy_ocid" {
   description = "OCID of the tenancy (root compartment)."
   type        = string
+  default     = ""
 }
 
 variable "oci_compartment_ocid" {
@@ -20,24 +21,28 @@ variable "oci_region" {
 variable "oci_user_ocid" {
   description = "OCID of the OCI user that Terraform runs as."
   type        = string
+  default     = ""
   sensitive   = true
 }
 
 variable "oci_fingerprint" {
   description = "Fingerprint of the user's API key."
   type        = string
+  default     = ""
   sensitive   = true
 }
 
 variable "oci_private_key" {
   description = "Contents of the user's API private key (PEM). Prefer over oci_private_key_path in Terraform Cloud."
   type        = string
+  default     = ""
   sensitive   = true
 }
 
 variable "oci_private_key_path" {
   description = "Filesystem path to the user's API private key. Leave empty in Terraform Cloud (no shared filesystem)."
   type        = string
+  default     = ""
   sensitive   = true
 }
 
@@ -45,6 +50,7 @@ variable "oci_private_key_path" {
 variable "cluster_name" {
   description = "Name of the OKE cluster. Defaults to a random_pet suffix."
   type        = string
+  default     = ""
 }
 
 variable "kubernetes_version" {
