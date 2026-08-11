@@ -66,20 +66,23 @@ module "oke" {
   # policy to fetch the kubeconfig via instance principal.
   create_iam_resources = true
 
-  # --- Worker node pool: 4 OCPU / 8 GB RAM, 3–5 nodes ---
+  # --- Worker node pool ---
+  # Sized conservatively to fit the account's resource-creation limit
+  # (LimitExceeded: "upgrade to Pay As You Go ... or delete resources").
+  # 1 node / 1 OCPU / 8 GB, autoscaler pinned to 1 so no scale-up is attempted.
   worker_pools = {
     default = {
       shape            = "VM.Standard.E5.Flex"
-      ocpus            = 4
+      ocpus            = 1
       memory           = 8
-      size             = 3
-      min_size         = var.node_pool_min_size
-      max_size         = var.node_pool_max_size
+      size             = 1
+      min_size         = 1
+      max_size         = 1
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
       mode             = "node-pool"
-      autoscale        = var.enable_autoscaling
-      allow_autoscaler = var.enable_autoscaling
+      autoscale        = false
+      allow_autoscaler = false
     }
   }
 
@@ -89,8 +92,8 @@ module "oke" {
     gatewayAPI = { enabled = true } # the parent traffic stack uses the `cilium` GatewayClass
   }
 
-  # --- Cluster Autoscaler (installed by the module via Helm) ---
-  cluster_autoscaler_install = var.enable_autoscaling
+  # --- Cluster Autoscaler (disabled: node pool is pinned to a single node) ---
+  cluster_autoscaler_install = false
 
   # --- Tags (nested map: one tag set per resource type) ---
   freeform_tags = {
