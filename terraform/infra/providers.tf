@@ -4,7 +4,7 @@ terraform {
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = ">= 6.0.0"
+      version = ">= 8.14.0"
     }
     local = {
       source  = "hashicorp/local"
@@ -18,6 +18,10 @@ terraform {
       source  = "hashicorp/time"
       version = ">= 0.11.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = ">= 4.0.0"
+    }
   }
 }
 
@@ -30,6 +34,17 @@ terraform {
 # (with an existing ~/.oci/config) and in HCP Terraform Cloud (with the
 # oci_* variables configured as sensitive workspace variables).
 provider "oci" {
+  tenancy_ocid     = var.oci_tenancy_ocid != "" ? var.oci_tenancy_ocid : null
+  user_ocid        = var.oci_user_ocid != "" ? var.oci_user_ocid : null
+  fingerprint      = var.oci_fingerprint != "" ? var.oci_fingerprint : null
+  private_key      = var.oci_private_key != "" ? var.oci_private_key : null
+  private_key_path = var.oci_private_key_path != "" ? var.oci_private_key_path : null
+  region           = var.oci_region != "" ? var.oci_region : null
+}
+
+# Required by the oke module for IAM resources that must be created in the home region
+provider "oci" {
+  alias            = "home"
   tenancy_ocid     = var.oci_tenancy_ocid != "" ? var.oci_tenancy_ocid : null
   user_ocid        = var.oci_user_ocid != "" ? var.oci_user_ocid : null
   fingerprint      = var.oci_fingerprint != "" ? var.oci_fingerprint : null

@@ -1,5 +1,5 @@
 locals {
-  compartment_ocid = var.oci_compartment_ocid != "" ? var.oci_compartment_ocid : var.oci_tenancy_ocid
+  compartment_ocid = var.oci_compartment_ocid
 
   # Subnet CIDRs carved out of the VCN.
   lb_subnet_cidr    = cidrsubnet(var.vcn_cidr, 8, 0) # 10.240.0.0/24 (public, LoadBalancers)
@@ -11,7 +11,7 @@ locals {
 # --- VCN ---
 resource "oci_core_vcn" "kronos" {
   compartment_id = local.compartment_ocid
-  cidr_block     = var.vcn_cidr
+  cidr_blocks    = var.vcn_cidr
   display_name   = "${local.cluster_name}-vcn"
   dns_label      = "kronos"
 }

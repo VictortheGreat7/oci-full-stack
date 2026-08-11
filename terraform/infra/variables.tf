@@ -60,9 +60,9 @@ variable "kubernetes_version" {
 }
 
 variable "cni_type" {
-  description = "CNI to use. OCI_VCN_IP_NATIVE = VCN-native pod networking (Cilium is layered on top via CNI chaining)."
+  description = "CNI for the cluster: 'flannel' (default, required for the module's built-in Cilium support) or 'npn' (VCN-native pod networking)."
   type        = string
-  default     = "OCI_VCN_IP_NATIVE"
+  default     = "flannel"
 }
 
 variable "node_shape" {
@@ -122,8 +122,8 @@ variable "enable_autoscaling" {
 # --- Networking ---
 variable "vcn_cidr" {
   description = "CIDR for the VCN."
-  type        = string
-  default     = "10.240.0.0/16"
+  type        = list(string)
+  default     = ["10.240.0.0/16"]
 }
 
 variable "services_cidr" {
