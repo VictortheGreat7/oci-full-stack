@@ -38,6 +38,7 @@ module "oke" {
   cni_type                          = var.cni_type # "flannel" required for the module's built-in Cilium support
   control_plane_is_public           = true
   assign_public_ip_to_control_plane = true # easy kubectl access to the public API endpoint
+  control_plane_allowed_cidrs       = ["0.0.0.0/0"]
   output_detail                     = true # expose cluster_kubeconfig / detailed outputs
 
   # --- SSH keys for the internal bastion -> operator deployment plumbing ---
@@ -82,8 +83,8 @@ module "oke" {
       shape            = "VM.Standard.E5.Flex"
       ocpus            = 4
       memory           = 16
-      size             = 1
-      min_size         = 1
+      size             = 3
+      min_size         = 3
       max_size         = 6
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"

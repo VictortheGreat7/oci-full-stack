@@ -256,28 +256,6 @@ jobs:
           terraform validate
           terraform apply -auto-approve
         working-directory: ./terraform/infra
-      - name: Generate OKE kubeconfig
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-          OCI_REGION: ${{ secrets.OCI_REGION }}
-        run: |
-          set -e
-
-          mkdir -p ${{ github.workspace }}/.terraform.d/plugin-cache
-          echo "plugin_cache_dir = \"${{ github.workspace }}/.terraform.d/plugin-cache\"" > ~/.terraformrc
-
-          terraform init
-          CLUSTER_ID=$(terraform output -raw cluster_id)
-          echo "Retrieved cluster id: ${CLUSTER_ID}"
-
-          oci ce cluster create-kubeconfig \
-            --cluster-id "${CLUSTER_ID}" \
-            --file ${{ github.workspace }}/terraform/kubeconfig \
-            --region "${OCI_REGION}" \
-            --token-version 2.0.0
-
-          KUBECONFIG=${{ github.workspace }}/terraform/kubeconfig kubectl cluster-info
-        working-directory: ./terraform/infra
       - name: Wait for OKE nodes to be ready
         env:
           KUBECONFIG: ${{ github.workspace }}/terraform/kubeconfig
