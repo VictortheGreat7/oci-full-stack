@@ -44,23 +44,19 @@ module "oke" {
   ssh_public_key  = tls_private_key.ssh.public_key_openssh
   ssh_private_key = tls_private_key.ssh.private_key_pem
 
-  # VM.Standard.E4.Flex (the module default for both) is not offered in this
-  # region. Using A1.Flex (ARM) for both: cheapest viable shape. Oracle Linux
-  # images are used (the bastion's default "Oracle Autonomous Linux" has no
-  # aarch64 build), and the operator already defaults to Oracle Linux.
-  # bastion_allowed_cidrs must allow the CI/apply runner to SSH to the bastion
-  # public IP for the module's remote-exec provisioning (default [] = no access).
+  # VM.Standard.E4.Flex (the module default for both) has quota 0 in this
+  # tenancy. Using E5.Flex 1 OCPU/4 GB for both (cheapest paid shape with
+  # capacity). bastion_allowed_cidrs must allow the CI/apply runner to SSH.
   bastion_allowed_cidrs = ["0.0.0.0/0"]
-  bastion_image_os      = "Oracle Linux"
   bastion_shape = {
-    shape                     = "VM.Standard.E4.Flex"
+    shape                     = "VM.Standard.E5.Flex"
     ocpus                     = 1
-    memory                    = 1
+    memory                    = 4
     boot_volume_size          = 50
     baseline_ocpu_utilization = 100
   }
   operator_shape = {
-    shape                     = "VM.Standard.E4.Flex"
+    shape                     = "VM.Standard.E5.Flex"
     ocpus                     = 1
     memory                    = 4
     boot_volume_size          = 50
