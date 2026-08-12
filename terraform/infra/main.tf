@@ -82,8 +82,8 @@ module "oke" {
       shape            = "VM.Standard.E5.Flex"
       ocpus            = 4
       memory           = 16
-      size             = 3
-      min_size         = 3
+      size             = 1
+      min_size         = 1
       max_size         = 6
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
