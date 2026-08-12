@@ -84,7 +84,7 @@ module "oke" {
       ocpus            = 3
       memory           = 16
       size             = 1
-      min_size         = 2
+      min_size         = 4
       max_size         = 6
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
