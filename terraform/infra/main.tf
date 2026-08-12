@@ -47,7 +47,11 @@ module "oke" {
   # VM.Standard.E4.Flex (the module default for both) has quota 0 in this
   # tenancy. Using E5.Flex 1 OCPU/4 GB for both (cheapest paid shape with
   # capacity). bastion_allowed_cidrs must allow the CI/apply runner to SSH.
-  bastion_allowed_cidrs = ["0.0.0.0/0"]
+  # Pin bastion + operator to AD-2 so they don't consume E5 quota in AD-1
+  # (where the worker pool also places nodes).
+  bastion_allowed_cidrs        = ["0.0.0.0/0"]
+  bastion_availability_domain  = "CiWh:US-ASHBURN-AD-3"
+  operator_availability_domain = "CiWh:US-ASHBURN-AD-3"
   bastion_shape = {
     shape                     = "VM.Standard.E5.Flex"
     ocpus                     = 1
