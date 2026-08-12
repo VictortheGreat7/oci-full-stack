@@ -53,14 +53,14 @@ module "oke" {
   bastion_allowed_cidrs = ["0.0.0.0/0"]
   bastion_image_os      = "Oracle Linux"
   bastion_shape = {
-    shape                     = "VM.Standard.A1.Flex"
+    shape                     = "VM.Standard.E4.Flex"
     ocpus                     = 1
     memory                    = 1
     boot_volume_size          = 50
     baseline_ocpu_utilization = 100
   }
   operator_shape = {
-    shape                     = "VM.Standard.A1.Flex"
+    shape                     = "VM.Standard.E4.Flex"
     ocpus                     = 1
     memory                    = 4
     boot_volume_size          = 50
@@ -80,8 +80,8 @@ module "oke" {
   worker_pools = {
     default = {
       shape            = "VM.Standard.E5.Flex"
-      ocpus            = 6
-      memory           = 24
+      ocpus            = 4
+      memory           = 16
       size             = 3
       min_size         = 3
       max_size         = 6
