@@ -45,16 +45,22 @@ module "oke" {
   ssh_private_key = tls_private_key.ssh.private_key_pem
 
   # VM.Standard.E4.Flex (the module default for both) is not offered in this
-  # region; overriding to E5.Flex avoids 404-NotAuthorizedOrNotFound on launch.
+  # region. Using A1.Flex (ARM) for both: cheapest viable shape. Oracle Linux
+  # images are used (the bastion's default "Oracle Autonomous Linux" has no
+  # aarch64 build), and the operator already defaults to Oracle Linux.
+  # bastion_allowed_cidrs must allow the CI/apply runner to SSH to the bastion
+  # public IP for the module's remote-exec provisioning (default [] = no access).
+  bastion_allowed_cidrs = ["0.0.0.0/0"]
+  bastion_image_os      = "Oracle Linux"
   bastion_shape = {
-    shape                     = "VM.Standard.E5.Flex"
+    shape                     = "VM.Standard.A1.Flex"
     ocpus                     = 1
-    memory                    = 4
+    memory                    = 1
     boot_volume_size          = 50
     baseline_ocpu_utilization = 100
   }
   operator_shape = {
-    shape                     = "VM.Standard.E5.Flex"
+    shape                     = "VM.Standard.A1.Flex"
     ocpus                     = 1
     memory                    = 4
     boot_volume_size          = 50
@@ -67,22 +73,23 @@ module "oke" {
   create_iam_resources = true
 
   # --- Worker node pool ---
-  # Sized conservatively to fit the account's resource-creation limit
-  # (LimitExceeded: "upgrade to Pay As You Go ... or delete resources").
-  # 1 node / 1 OCPU / 8 GB, autoscaler pinned to 1 so no scale-up is attempted.
+  # Maximize E5.Flex usage. The pool spreads across all 3 ADs
+  # (placement_ads = [1,2,3]), and each AD caps at 13 E5 OCPU. With nodes spread
+  # ~2/2/2, 6 nodes x 6 OCPU = 36 OCPU total / 12 OCPU per AD (<= 13), using
+  # ~92% of the 39-OCPU E5 budget.
   worker_pools = {
     default = {
       shape            = "VM.Standard.E5.Flex"
-      ocpus            = 1
-      memory           = 8
-      size             = 1
-      min_size         = 1
-      max_size         = 1
+      ocpus            = 6
+      memory           = 24
+      size             = 3
+      min_size         = 3
+      max_size         = 6
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
       mode             = "node-pool"
-      autoscale        = false
-      allow_autoscaler = false
+      autoscale        = true
+      allow_autoscaler = true
     }
   }
 
@@ -92,8 +99,8 @@ module "oke" {
     gatewayAPI = { enabled = true } # the parent traffic stack uses the `cilium` GatewayClass
   }
 
-  # --- Cluster Autoscaler (disabled: node pool is pinned to a single node) ---
-  cluster_autoscaler_install = false
+  # --- Cluster Autoscaler (scale 4–6 nodes) ---
+  cluster_autoscaler_install = true
 
   # --- Tags (nested map: one tag set per resource type) ---
   freeform_tags = {
