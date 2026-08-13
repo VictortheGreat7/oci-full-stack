@@ -54,14 +54,14 @@ module "oke" {
   bastion_availability_domain  = "CiWh:US-ASHBURN-AD-3"
   operator_availability_domain = "CiWh:US-ASHBURN-AD-3"
   bastion_shape = {
-    shape                     = "VM.Standard.E5.Flex"
+    shape                     = "VM.Standard.A1.Flex"
     ocpus                     = 1
     memory                    = 4
     boot_volume_size          = 50
     baseline_ocpu_utilization = 100
   }
   operator_shape = {
-    shape                     = "VM.Standard.E5.Flex"
+    shape                     = "VM.Standard.A1.Flex"
     ocpus                     = 1
     memory                    = 4
     boot_volume_size          = 50
@@ -83,8 +83,8 @@ module "oke" {
       shape            = "VM.Standard.E5.Flex"
       ocpus            = 3
       memory           = 16
-      size             = 3
-      min_size         = 3
+      size             = 2
+      min_size         = 2
       max_size         = 6
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
