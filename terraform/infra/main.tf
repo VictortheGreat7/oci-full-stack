@@ -101,7 +101,7 @@ module "oke" {
     gatewayAPI = {
       enabled = true,
       gatewayClass = {
-        create = true
+        create = "true"
       }
     } # the parent traffic stack uses the `cilium` GatewayClass
   }
