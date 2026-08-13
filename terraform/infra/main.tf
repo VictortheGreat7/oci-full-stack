@@ -98,6 +98,7 @@ module "oke" {
   # --- Cilium (installed by the module via the operator) ---
   cilium_install = true
   cilium_helm_values = {
+    kubeProxyReplacement = true
     gatewayAPI = {
       enabled = true,
       gatewayClass = {
