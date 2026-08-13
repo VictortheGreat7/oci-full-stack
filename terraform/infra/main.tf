@@ -98,7 +98,12 @@ module "oke" {
   # --- Cilium (installed by the module via the operator) ---
   cilium_install = true
   cilium_helm_values = {
-    gatewayAPI = { enabled = true } # the parent traffic stack uses the `cilium` GatewayClass
+    gatewayAPI = {
+      enabled = true,
+      gatewayClass = {
+        create = true
+      }
+    } # the parent traffic stack uses the `cilium` GatewayClass
   }
 
   # --- Cluster Autoscaler (scale 4–6 nodes) ---
