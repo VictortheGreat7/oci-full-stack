@@ -83,8 +83,8 @@ module "oke" {
       shape            = "VM.Standard.E5.Flex"
       ocpus            = 3
       memory           = 16
-      size             = 2
-      min_size         = 2
+      size             = 3
+      min_size         = 3
       max_size         = 6
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
@@ -97,6 +97,7 @@ module "oke" {
 
   # --- Cilium (installed by the module via the operator) ---
   cilium_install = true
+  cilium_helm_version = "1.20.0"
   cilium_helm_values = {
     kubeProxyReplacement = true
     gatewayAPI = {
@@ -109,6 +110,7 @@ module "oke" {
 
   # --- Cluster Autoscaler (scale 4–6 nodes) ---
   cluster_autoscaler_install = true
+  cluster_autoscaler_helm_version = "9.59.0"
 
   # --- Tags (nested map: one tag set per resource type) ---
   freeform_tags = {
