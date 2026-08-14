@@ -297,6 +297,7 @@ jobs:
       - name: Deploy in-cluster resources (Helm/Kubernetes) with Terraform
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+          TF_VAR_oci_compartment_ocid: ${{ secrets.OCI_COMPARTMENT }}
         run: |
           set -e
 

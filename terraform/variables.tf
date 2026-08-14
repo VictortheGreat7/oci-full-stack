@@ -69,3 +69,8 @@ variable "email" {
   type        = string
   default     = "greatvictor.anjorin@gmail.com"
 }
+
+variable "oci_compartment_ocid" {
+  description = "OCID of the compartment where the stack is created."
+  type        = string
+}
