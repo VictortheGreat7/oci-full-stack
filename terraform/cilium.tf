@@ -8,12 +8,12 @@ resource "null_resource" "install_gateway_api_crds" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
+      KUBECONFIG=${abspath("${path.module}/kubeconfig")} \
       kubectl apply --server-side -f \
         https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
 
       # Wait until core Gateway API CRDs are established
-      KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
+      KUBECONFIG=${abspath("${path.module}/kubeconfig")} \
       kubectl wait --for=condition=Established \
         crd/gateways.gateway.networking.k8s.io \
         crd/gatewayclasses.gateway.networking.k8s.io \
@@ -32,7 +32,7 @@ resource "null_resource" "restart_cilium_operator" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
+      KUBECONFIG=${abspath("${path.module}/kubeconfig")} \
       kubectl rollout restart deployment/cilium-operator -n kube-system
     EOT
   }
