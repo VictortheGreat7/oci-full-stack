@@ -8,14 +8,6 @@ terraform {
       source  = "hashicorp/helm"
       version = ">= 3.2.0"
     }
-    http = {
-      source  = "hashicorp/http"
-      version = ">= 3.6.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = ">= 0.14.0"
-    }
     null = {
       source  = "hashicorp/null"
       version = ">= 3.3.0"

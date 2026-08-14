@@ -1,54 +1,41 @@
-# Fetch latest Gateway API CRDs
-data "http" "gateway_api_crds" {
-  url = "https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml"
-}
-
-# Split multi-doc YAML into individual manifests
-locals {
-  gateway_api_docs = [
-    for doc in split("\n---\n", data.http.gateway_api_crds.response_body)
-    : yamldecode(doc)
-    if length(trimspace(doc)) > 0
-  ]
-
-  gateway_api_manifests = {
-    for doc in local.gateway_api_docs :
-    "${doc.apiVersion}/${doc.kind}/${doc.metadata.name}" => doc
+# Wait for cluster to exist (depends on your OKE module output)
+resource "null_resource" "install_gateway_api_crds" {
+  triggers = {
+    cluster_id = var.cluster_id
+    # Change this to force re-apply when you want to upgrade CRDs:
+    crd_version = "latest"
   }
-}
 
-# Install CRDs
-resource "kubernetes_manifest" "gateway_api_crd" {
-  for_each = local.gateway_api_manifests
+  provisioner "local-exec" {
+    command = <<-EOT
+      KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
+      kubectl apply --server-side -f \
+        https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
 
-  manifest = each.value
-}
-
-# Give the API server a moment to register CRDs
-resource "time_sleep" "wait_for_crds" {
-  create_duration = "30s"
-
-  depends_on = [kubernetes_manifest.gateway_api_crd]
+      # Wait until core Gateway API CRDs are established
+      KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
+      kubectl wait --for=condition=Established \
+        crd/gateways.gateway.networking.k8s.io \
+        crd/gatewayclasses.gateway.networking.k8s.io \
+        crd/httproutes.gateway.networking.k8s.io \
+        --timeout=120s
+    EOT
+  }
 }
 
 # Restart Cilium operator after CRDs exist
 resource "null_resource" "restart_cilium_operator" {
   triggers = {
     cluster_id = var.cluster_id
-    crds_hash  = sha256(jsonencode(local.gateway_api_manifests))
+    crds_hash  = sha256("${null_resource.install_gateway_api_crds.id}")
   }
 
   provisioner "local-exec" {
     command = <<-EOT
       KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
       kubectl rollout restart deployment/cilium-operator -n kube-system
-
-      KUBECONFIG=${abspath("${path.module}/../kubeconfig")} \
-      kubectl wait --for=condition=Established crd/gateways.gateway.networking.k8s.io --timeout=120s || true
     EOT
   }
 
-  depends_on = [
-    time_sleep.wait_for_crds
-  ]
+  depends_on = [null_resource.install_gateway_api_crds]
 }
