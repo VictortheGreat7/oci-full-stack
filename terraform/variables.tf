@@ -70,7 +70,7 @@ variable "email" {
   default     = "greatvictor.anjorin@gmail.com"
 }
 
-variable "oci_compartment_ocid" {
-  description = "OCID of the compartment where the stack is created."
+variable "cluster_id" {
+  description = "ID of the OKE cluster (matches infra module output)."
   type        = string
 }

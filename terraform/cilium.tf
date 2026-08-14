@@ -22,8 +22,6 @@ resource "kubernetes_manifest" "gateway_api_crd" {
   for_each = local.gateway_api_manifests
 
   manifest = each.value
-
-  depends_on = [module.infra]
 }
 
 # Give the API server a moment to register CRDs
@@ -36,7 +34,7 @@ resource "time_sleep" "wait_for_crds" {
 # Restart Cilium operator after CRDs exist
 resource "null_resource" "restart_cilium_operator" {
   triggers = {
-    cluster_id = module.infra.cluster_id
+    cluster_id = var.cluster_id
     crds_hash  = sha256(jsonencode(local.gateway_api_manifests))
   }
 
@@ -51,7 +49,6 @@ resource "null_resource" "restart_cilium_operator" {
   }
 
   depends_on = [
-    module.infra,
     time_sleep.wait_for_crds
   ]
 }

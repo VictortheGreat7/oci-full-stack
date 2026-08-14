@@ -34,12 +34,6 @@ resource "helm_release" "descheduler" {
   timeout = 600
 }
 
-module "infra" {
-  source  = "./infra"
-
-  oci_compartment_ocid = var.oci_compartment_ocid
-}
-
 # resource "kubernetes_service_account_v1" "headlamp-admin" {
 #   metadata {
 #     name      = "headlamp-admin"

@@ -297,12 +297,13 @@ jobs:
       - name: Deploy in-cluster resources (Helm/Kubernetes) with Terraform
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-          TF_VAR_oci_compartment_ocid: ${{ secrets.OCI_COMPARTMENT }}
         run: |
           set -e
 
           TF_VAR_cluster_name=$(cd infra && terraform output -raw cluster_name)
+          TF_VAR_cluster_id=$(cd infra && terraform output -raw cluster_id)
           export TF_VAR_cluster_name
+          export TF_VAR_cluster_id
 
           cat <<EOF > terraform.tfvars.json
           {
