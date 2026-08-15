@@ -81,11 +81,11 @@ module "oke" {
   worker_pools = {
     default = {
       shape            = "VM.Standard.E5.Flex"
-      ocpus            = 2
+      ocpus            = 4
       memory           = 16
       size             = 3
       min_size         = 3
-      max_size         = 6
+      max_size         = 9
       boot_volume_size = var.node_disk_size_gbs
       image_type       = "oke"
       mode             = "node-pool"
