@@ -34,7 +34,7 @@ spec:
             component: backend
       initContainers:
         - name: wait-for-pqbouncer
-          image: busybox:1.28
+          image: docker.io/busybox:1.28
           command: 
             - 'sh'
             - '-c'
@@ -47,7 +47,7 @@ spec:
             - 'until nc -z datadog.monitoring.svc.cluster.local 4318 && nc -z datadog.monitoring.svc.cluster.local 8126; do echo waiting for datadog; sleep 2; done;'
       containers:
         - name: backend
-          image: victorthegreat7/kronos-backend:latest
+          image: docker.io/victorthegreat7/kronos-backend:latest
           env:
             - name: OTEL_SERVICE_NAME
               value: kronos-backend

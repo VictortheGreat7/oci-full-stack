@@ -31,7 +31,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: do-block-storage
+          storageClassName: oci-bv
           resources:
             requests:
               storage: 10Gi
@@ -67,7 +67,7 @@ alertmanager:
     storage:
       volumeClaimTemplate:
         spec:
-          storageClassName: do-block-storage
+          storageClassName: oci-bv
           resources:
             requests:
               storage: 10Gi

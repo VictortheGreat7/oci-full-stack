@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: victorthegreat7/kronos-frontend:latest
+          image: docker.io/victorthegreat7/kronos-frontend:latest
           ports:
             - containerPort: 80
           resources:

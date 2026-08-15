@@ -56,14 +56,14 @@ spec:
             component: pgbouncer
       initContainers:
         - name: wait-for-postgres
-          image: busybox:1.28
+          image: docker.io/busybox:1.28
           command: 
             - 'sh'
             - '-c'
             - 'until nc -z postgres-postgresql-primary.kronos.svc.cluster.local 5432; do echo waiting for postgres; sleep 2; done;'
       containers:
         - name: pgbouncer
-          image: edoburu/pgbouncer:latest
+          image: docker.io/edoburu/pgbouncer:latest
           ports:
             - containerPort: 5432
               name: pgbouncer
@@ -85,7 +85,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
         - name: pgbouncer-exporter
-          image: prometheuscommunity/pgbouncer-exporter:latest
+          image: docker.io/prometheuscommunity/pgbouncer-exporter:latest
           ports:
             - containerPort: 9127
               name: metrics
