@@ -90,8 +90,19 @@ module "oke" {
       image_type       = "oke"
       mode             = "node-pool"
       autoscale        = true
-      allow_autoscaler = true
       placement_ads    = [1, 2, 3]
+    }
+
+    autoscaler-host = {
+      shape             = "VM.Standard.E5.Flex"
+      ocpus             = 1
+      memory            = 8
+      size              = 1
+      boot_volume_size  = var.node_disk_size_gbs
+      image_type        = "oke"
+      mode              = "node-pool"
+      allow_autoscaler  = true
+      placement_ads     = [1]
     }
   }
 

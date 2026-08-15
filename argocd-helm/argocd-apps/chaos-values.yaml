@@ -7,7 +7,7 @@ projects:
     additionalAnnotations:
       argocd.argoproj.io/sync-wave: "6"
     sourceRepos:
-      - "https://github.com/VictortheGreat7/digital-ocean-full-stack.git"
+      - "https://github.com/VictortheGreat7/oci-full-stack.git"
       - "https://grafana.github.io/helm-charts"
     destinations:
       - server: https://kubernetes.default.svc
@@ -40,7 +40,7 @@ applications:
       syncOptions:
         - CreateNamespace=true
     sources:
-      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
         targetRevision: main
         ref: values
       - repoURL: https://grafana.github.io/helm-charts
@@ -65,7 +65,7 @@ applications:
       automated:
         selfHeal: true
     source:
-      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
       targetRevision: main
       path: manifests/chaos-testing
     destination:

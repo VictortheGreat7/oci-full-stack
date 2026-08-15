@@ -7,7 +7,7 @@ projects:
     finalizers:
       - resources-finalizer.argocd.argoproj.io
     sourceRepos:
-      - "https://github.com/VictortheGreat7/digital-ocean-full-stack.git"
+      - "https://github.com/VictortheGreat7/oci-full-stack.git"
       - "https://github.com/prometheus-operator/kube-prometheus"
       - "https://prometheus-community.github.io/helm-charts"
       - "https://helm.datadoghq.com"
@@ -45,7 +45,7 @@ applications:
       syncOptions:
         - CreateNamespace=true
     source:
-      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
       targetRevision: main
       path: manifests/monitoring/
     destination:
@@ -76,7 +76,7 @@ applications:
           - .spec.rules[]?.backendRefs[]?.kind
           - .spec.rules[]?.backendRefs[]?.weight
     sources:
-      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
         targetRevision: main
         ref: values
       - repoURL: https://prometheus-community.github.io/helm-charts
@@ -137,7 +137,7 @@ applications:
       jqPathExpressions:
         - .spec.template.metadata.annotations["checksum/clusteragent_token"]
     sources:
-      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
         targetRevision: main
         ref: values
       - repoURL: https://helm.datadoghq.com

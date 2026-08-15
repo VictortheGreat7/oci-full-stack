@@ -7,7 +7,7 @@ projects:
     additionalAnnotations:
       argocd.argoproj.io/sync-wave: "4"
     sourceRepos:
-      - "https://github.com/VictortheGreat7/digital-ocean-full-stack.git"
+      - "https://github.com/VictortheGreat7/oci-full-stack.git"
       - "https://charts.bitnami.com/bitnami"
     destinations:
       - server: https://kubernetes.default.svc
@@ -29,7 +29,7 @@ applications:
   #     syncOptions:
   #       - CreateNamespace=true
   #   sources:
-  #     - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+  #     - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
   #       targetRevision: main
   #       ref: values
   #     - repoURL: https://charts.bitnami.com/bitnami
@@ -54,10 +54,10 @@ applications:
       syncOptions:
         - CreateNamespace=true
     sources:
-      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
         targetRevision: main
         path: manifests/kronos-app/postgres
-      - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
         targetRevision: main
         ref: values
       - repoURL: https://charts.bitnami.com/bitnami
@@ -81,7 +81,7 @@ applications:
         selfHeal: true
         prune: true
     source:
-      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
       targetRevision: main
       path: manifests/kronos-app
       kustomize:

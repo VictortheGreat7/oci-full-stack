@@ -10,7 +10,7 @@ applications:
       automated:
         selfHeal: true
     source:
-      repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+      repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
       targetRevision: main
       path: manifests/argo-parent/
     destination:
@@ -33,7 +33,7 @@ applications:
           maxDuration: 3m0s
           factor: 2
     sources:
-    - repoURL: https://github.com/VictortheGreat7/digital-ocean-full-stack.git
+    - repoURL: https://github.com/VictortheGreat7/oci-full-stack.git
       targetRevision: main
       ref: values
     - repoURL: https://argoproj.github.io/argo-helm
