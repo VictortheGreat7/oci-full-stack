@@ -96,20 +96,22 @@ module "oke" {
   }
 
   # --- Cilium (installed by the module via the operator) ---
-  cilium_install = true
+  cilium_install      = true
   cilium_helm_version = "1.20.0"
-  cilium_helm_values = {
-    kubeProxyReplacement = true
-    gatewayAPI = {
-      enabled = true,
-      gatewayClass = {
-        create = "true"
+  cilium_helm_values = merge(
+    { kubeProxyReplacement = true },
+    var.enable_gateway_api ? {
+      gatewayAPI = {
+        enabled      = true
+        gatewayClass = { create = "true" }
       }
-    } # the parent traffic stack uses the `cilium` GatewayClass
-  }
+    } : {}
+  )
+  cilium_reapply = var.enable_gateway_api # force helm upgrade on pass 2
+
 
   # --- Cluster Autoscaler (scale 4–6 nodes) ---
-  cluster_autoscaler_install = true
+  cluster_autoscaler_install      = true
   cluster_autoscaler_helm_version = "9.59.0"
 
   # --- Tags (nested map: one tag set per resource type) ---
@@ -123,6 +125,8 @@ module "oke" {
     service_lb        = {}
     workers           = var.labels
   }
+
+  depends_on = [null_resource.gateway_api_crds]
 }
 
 # Kubeconfig consumed by the parent workspace (oci-full-stack) and by kubectl.
@@ -130,4 +134,14 @@ resource "local_file" "kubeconfig" {
   content         = yamlencode(module.oke.cluster_kubeconfig)
   filename        = abspath("${path.module}/../kubeconfig")
   file_permission = "0600"
+}
+
+resource "null_resource" "gateway_api_crds" {
+  count = var.enable_gateway_api ? 1 : 0
+
+  provisioner "local-exec" {
+    command = "kubectl --kubeconfig=${local_file.kubeconfig.filename} apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml"
+  }
+
+  depends_on = [local_file.kubeconfig]
 }

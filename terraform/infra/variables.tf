@@ -163,3 +163,8 @@ variable "labels" {
     "oci:tags" = "oci-full-stack"
   }
 }
+
+variable "enable_gateway_api" {
+  type    = bool
+  default = false
+}
