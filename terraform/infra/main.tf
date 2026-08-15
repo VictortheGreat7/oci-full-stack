@@ -125,8 +125,6 @@ module "oke" {
     service_lb        = {}
     workers           = var.labels
   }
-
-  depends_on = [null_resource.gateway_api_crds]
 }
 
 # Kubeconfig consumed by the parent workspace (oci-full-stack) and by kubectl.
