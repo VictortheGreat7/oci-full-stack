@@ -80,8 +80,8 @@ module "oke" {
   # ~92% of the 39-OCPU E5 budget.
   worker_pools = {
     default = {
-      shape            = "VM.Standard.A1.Flex"
-      ocpus            = 3
+      shape            = "VM.Standard.E5.Flex"
+      ocpus            = 2
       memory           = 16
       size             = 3
       min_size         = 3
