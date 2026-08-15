@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   # cleanup: post
-  parallelism: 3
+  parallelism: 5
   runner:
     image: grafana/k6:latest
     affinity:
