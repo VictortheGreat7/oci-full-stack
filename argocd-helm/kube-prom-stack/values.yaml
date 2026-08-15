@@ -89,7 +89,7 @@ grafana:
   #   enabled: true
   persistence:
     enabled: true
-    storageClassName: do-block-storage
+    storageClassName: oci-bv
     size: 10Gi
   resources:
     limits:

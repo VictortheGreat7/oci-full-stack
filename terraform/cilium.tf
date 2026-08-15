@@ -10,7 +10,7 @@ resource "null_resource" "install_gateway_api_crds" {
     command = <<-EOT
       KUBECONFIG=${abspath("${path.module}/kubeconfig")} \
       kubectl apply --server-side -f \
-        https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
+        https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml
 
       # Wait until core Gateway API CRDs are established
       KUBECONFIG=${abspath("${path.module}/kubeconfig")} \

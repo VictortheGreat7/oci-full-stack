@@ -73,7 +73,7 @@ primary:
   # Translates volumeClaimTemplates
   persistence:
     enabled: true
-    storageClass: "do-block-storage"
+    storageClass: "oci-bv"
     size: 20Gi
 
   # Translates persistentVolumeClaimRetentionPolicy
@@ -116,7 +116,7 @@ readReplicas:
 
   persistence:
     enabled: true
-    storageClass: "do-block-storage"
+    storageClass: "oci-bv"
     size: 20Gi
 
   persistentVolumeClaimRetentionPolicy:
