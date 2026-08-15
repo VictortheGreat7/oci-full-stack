@@ -49,8 +49,8 @@ const profiles = {
   // Expected Normal Load
   load: {
     stages: [
-      { duration: '3m', target: 1000 }, // Start with 1000 users
-      { duration: '15m', target: 1000 }, // Stay at 1000 users
+      { duration: '3m', target: 2500 }, // Start with 1000 users
+      { duration: '15m', target: 2500 }, // Stay at 1000 users
       { duration: '2m', target: 0 }, // Ramp down to 0 users
     ],
     thresholds: {
@@ -64,12 +64,12 @@ const profiles = {
   // Stress Testing to find breaking points
   stress: {
     stages: [
-      { duration: '2m', target: 500 }, // Start with 500 users
+      { duration: '2m', target: 250 }, // Start with 250 users
+      { duration: '5m', target: 500}, // Ramp up to 500 users
       { duration: '5m', target: 750}, // Ramp up to 750 users
-      { duration: '5m', target: 1000}, // Ramp up to 1000 users
-      { duration: '5m', target: 1250}, // Ramp up to 1250 users
       { duration: '5m', target: 1500}, // Ramp up to 1500 users
-      { duration: '10m', target: 1500}, // Stay at 1500 users
+      { duration: '5m', target: 3000}, // Ramp up to 3000 users
+      { duration: '10m', target: 3000}, // Stay at 3000 users
       { duration: '5m', target: 0 }, // Recover
     ],
     thresholds: {
@@ -81,11 +81,11 @@ const profiles = {
   // Spike Testing for sudden traffic bursts
   spike: {
     stages: [
-      { duration: '1m', target: 1000 }, // Baseline
-      { duration: '5m', target: 1500 }, // Spike to 1500 users
-      { duration: '10m', target: 1500 }, // Stay at spike
-      { duration: '2m', target: 1000 }, // Drop back to baseline
-      { duration: '1m', target: 1000 }, // Stay at baseline
+      { duration: '1m', target: 2000 }, // Baseline
+      { duration: '5m', target: 3000 }, // Spike to 4000 users
+      { duration: '10m', target: 3000 }, // Stay at spike
+      { duration: '2m', target: 2000 }, // Drop back to baseline
+      { duration: '1m', target: 2000 }, // Stay at baseline
       { duration: '1m', target: 0 }, // Recover
     ],
     thresholds: {
