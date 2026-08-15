@@ -81,7 +81,7 @@ module "oke" {
   worker_pools = {
     default = {
       shape            = "VM.Standard.E5.Flex"
-      ocpus            = 4
+      ocpus            = 2
       memory           = 16
       size             = 3
       min_size         = 3
