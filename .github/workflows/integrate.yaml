@@ -344,6 +344,7 @@ jobs:
       OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
       OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
       OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
+      KUBECONFIG: ${{ github.workspace }}/terraform/kubeconfig
     steps:
       - name: Checkout current Github repository
         uses: actions/checkout@v6
@@ -407,6 +408,7 @@ jobs:
       OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
       OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
       OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
+      KUBECONFIG: ${{ github.workspace }}/terraform/kubeconfig
     steps:
       - name: Checkout current Github repository
         uses: actions/checkout@v6
