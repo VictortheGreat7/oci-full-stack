@@ -253,6 +253,9 @@ jobs:
           # Pass 1: cluster + basic Cilium (no Gateway API), writes kubeconfig
           terraform apply -var="enable_gateway_api=false" -auto-approve
 
+          # Step 2a — CRDs only, nothing else
+          terraform apply -var="enable_gateway_api=true" -target=null_resource.gateway_api_crds -auto-approve
+
           # Install CRDs using the kubeconfig from pass 1, then upgrade Cilium
           terraform apply -var="enable_gateway_api=true" -auto-approve
         working-directory: ./terraform/infra
