@@ -87,7 +87,10 @@ jobs:
         set -e
 
         TF_VAR_cluster_name=$(cd infra && terraform output -raw cluster_name)
+        TF_VAR_cluster_id=$(cd infra && terraform output -raw cluster_id)
         export TF_VAR_cluster_name
+        export TF_VAR_cluster_id
+
 
         cat <<EOF > terraform.tfvars.json
         {
