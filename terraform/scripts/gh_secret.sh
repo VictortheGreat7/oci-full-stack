@@ -14,14 +14,12 @@ DATADOG_API_KEY=""
 DATADOG_APP_KEY=""
 POSTGRES_PASS=""
 REDIS_PASS=""
-
-# Oracle Cloud Infrastructure (OKE)
-OCI_TENANCY=""
 OCI_USER=""
+OCI_TENANCY=""
 OCI_COMPARTMENT=""
 OCI_FINGERPRINT=""
 OCI_REGION=""
-OCI_PRIVATE_KEY=""
+OCI_PRIVATE_KEY=""y
 
 # Declare an associative array to hold secrets and their corresponding values
 declare -A secrets=(
@@ -37,10 +35,10 @@ declare -A secrets=(
   ["REDIS_PASS"]="${REDIS_PASS}"
   ["OCI_TENANCY"]="${OCI_TENANCY}"
   ["OCI_USER"]="${OCI_USER}"
-  ["OCI_COMPARTMENT"]="${OCI_COMPARTMENT}"
   ["OCI_FINGERPRINT"]="${OCI_FINGERPRINT}"
   ["OCI_REGION"]="${OCI_REGION}"
   ["OCI_PRIVATE_KEY"]="${OCI_PRIVATE_KEY}"
+  ["OCI_COMPARTMENT"]="${OCI_COMPARTMENT}"
 )
 
 # Iterate over the secrets and set them using `gh secret set`
